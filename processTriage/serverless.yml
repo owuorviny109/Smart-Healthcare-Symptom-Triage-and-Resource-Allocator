@@ -1,0 +1,40 @@
+service: kenya-healthcare-triage
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    TABLE_NAME: TriageResults
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/TriageResults"
+
+functions:
+  processTriage:
+    handler: handler.lambda_handler
+    events:
+      - http:
+          path: /triage
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    TriageResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TriageResults
+        AttributeDefinitions:
+          - AttributeName: patient_id
+            AttributeType: S
+          - AttributeName: hospital_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: patient_id
+            KeyType: HASH
+          - AttributeName: hospital_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
