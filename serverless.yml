@@ -1,0 +1,161 @@
+# serverless.yml - FINAL CORRECTED VERSION WITH GLOBAL CORS
+
+service: triage-ai-system
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+
+  # CRITICAL: Use httpApi with CORS enabled for all endpoints
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      maxAge: 86400
+
+  environment:
+    QUEUE_TABLE: ${self:custom.tables.queueTable}
+    RULES_TABLE: ${self:custom.tables.rulesTable}
+    SCHEDULE_TABLE: ${self:custom.tables.scheduleTable}
+    REPORTS_BUCKET: ${self:custom.buckets.reportsBucket}
+    PATIENTS_TABLE: ${self:custom.tables.patientsTable}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query 
+          Resource: "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/*"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource: "arn:aws:s3:::${self:custom.buckets.reportsBucket}/*"
+
+custom:
+  tables:
+    queueTable: triage-ai-queue-table
+    rulesTable: triage-ai-rules-table
+    scheduleTable: triage-ai-worker-schedule-table
+    patientsTable: triage-ai-patients-table
+  buckets:
+    reportsBucket: triage-ai-reports-${aws:accountId}
+
+functions:
+  processTriage:
+    handler: src/processTriage.lambda_handler
+    events:
+      - httpApi:
+          path: /triage
+          method: post
+
+  assignWorker:
+    handler: src/assignWorker.lambda_handler
+    events:
+      - schedule: rate(1 minute)
+
+  getDashboardData:
+    handler: src/getDashboardData.lambda_handler
+    events:
+      - httpApi:
+          path: /dashboard
+          method: get
+
+  generateReport:
+    handler: src/generateReport.lambda_handler
+    events:
+      - schedule: cron(0 2 * * ? *)
+
+  manageStaff:
+    handler: src/manageStaff.lambda_handler
+    events:
+      - httpApi:
+          path: /staff
+          method: POST
+      - httpApi:
+          path: /staff
+          method: GET
+          
+  managePatient:
+    handler: src/managePatient.lambda_handler
+    events:
+      - httpApi:
+          path: /patients/{nationalId}
+          method: get
+      - httpApi:
+          path: /patients
+          method: post
+
+resources:
+  Resources:
+    TriageQueueTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tables.queueTable}
+        AttributeDefinitions:
+          - AttributeName: triageId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: triageId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    TriageRulesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tables.rulesTable}
+        AttributeDefinitions:
+          - AttributeName: symptom
+            AttributeType: S
+        KeySchema:
+          - AttributeName: symptom
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    WorkerScheduleTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tables.scheduleTable}
+        AttributeDefinitions:
+          - AttributeName: workerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: workerId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    ReportsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.buckets.reportsBucket}
+        # The CorsConfiguration on the S3 bucket is for direct browser access to bucket objects,
+        # which is different from API Gateway CORS but good to have.
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ["*"]
+              AllowedMethods: [GET]
+              AllowedOrigins: ["*"]
+              MaxAge: 3000
+
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tables.patientsTable}
+        AttributeDefinitions:
+          - AttributeName: nationalId 
+            AttributeType: S
+        KeySchema:
+          - AttributeName: nationalId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

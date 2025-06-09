@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TriageAI | Staff Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #0d47a1;
+            --color-accent: #FFD700;
+            --color-secondary: #f8fafc;
+            --color-text: #334155;
+            --color-emergency: #e53935;
+            --color-medium: #f59e0b;
+            --color-low: #10b981;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--color-secondary); color: var(--color-text);}
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block;}
+        .bg-high { background-color: var(--color-emergency);}
+        .bg-medium { background-color: var(--color-medium);}
+        .bg-low { background-color: var(--color-low);}
+        .tab-btn.active { border-color: var(--color-primary); color: var(--color-primary);}
+        .fade-step { opacity: 0; pointer-events: none; position: absolute; width: 100%; left: 0; top: 0;}
+        .fade-step.active { opacity: 1; pointer-events: auto; position: static;}
+    </style>
+</head>
+<body class="bg-slate-100">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-screen-xl mx-auto px-6">
+            <div class="flex justify-between items-center py-4">
+                <a href="page.html" class="flex items-center space-x-2">
+                    <svg class="h-8 w-8 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                    <span class="text-2xl font-bold text-slate-800">TriageAI</span>
+                </a>
+                <nav>
+                    <a href="staff-frontend/page.html" class="font-semibold text-slate-600 hover:text-[var(--color-primary)] transition">← Back to Main Site</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-screen-xl mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold text-slate-900">Hospital Command Center</h1>
+        <p class="mt-2 text-slate-500">Live overview of patient triage, staff allocation, and operational analytics.</p>
+        <!-- Key Metrics Dashboard -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+            <div class="bg-white p-6 rounded-xl shadow-md"><p class="text-sm text-slate-500">Patients Waiting</p><p class="text-3xl font-bold text-[var(--color-primary)]" id="stat-waiting">0</p></div>
+            <div class="bg-white p-6 rounded-xl shadow-md"><p class="text-sm text-slate-500">Available Doctors</p><p class="text-3xl font-bold text-green-600" id="stat-doctors">0</p></div>
+            <div class="bg-white p-6 rounded-xl shadow-md"><p class="text-sm text-slate-500">High-Urgency Cases</p><p class="text-3xl font-bold text-[var(--color-emergency)]" id="stat-high-urgency">0</p></div>
+            <div class="bg-white p-6 rounded-xl shadow-md"><p class="text-sm text-slate-500">Available Nurses</p><p class="text-3xl font-bold text-green-600" id="stat-nurses">0</p></div>
+        </div>
+        <!-- Live Patient Queue & Triage/Staff Management -->
+        <div class="grid lg:grid-cols-3 gap-8 mt-8">
+            <!-- Live Patient Queue -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                <h3 class="font-bold text-xl mb-4">Live Patient Queue</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-slate-600 uppercase">
+                            <tr>
+                                <th class="p-3">Urgency</th>
+                                <th class="p-3">Patient ID</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Assigned To</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientQueueTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Triage & Staff Management Tabs -->
+            <div class="bg-white rounded-xl shadow-md relative">
+                <div class="border-b border-slate-200">
+                    <nav class="flex -mb-px" aria-label="Tabs">
+                        <button id="tab-triage" class="tab-btn active w-1/2 p-4 font-semibold border-b-2">
+                            Patient Intake & Triage
+                        </button>
+                        <button id="tab-staff" class="tab-btn w-1/2 p-4 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+                            Manage Staff
+                        </button>
+                    </nav>
+                </div>
+                <div class="p-6 relative min-h-[340px]">
+                    <!-- Patient Intake & Triage Pane -->
+                    <div id="pane-triage" class="tab-pane active">
+                        <!-- Step 0: Intake Choice -->
+                        <div id="intake-choice-step" class="fade-step active">
+                            <h3 class="font-bold text-xl mb-6">Patient Intake</h3>
+                            <div class="flex flex-col gap-4">
+                                <button id="btn-register-new" class="w-full bg-green-600 text-white font-semibold py-3 rounded-md hover:bg-green-700 transition">Register New Patient</button>
+                                <button id="btn-find-existing" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition">Find Existing Patient</button>
+                            </div>
+                        </div>
+                        <!-- Step 1: Search for Patient -->
+                        <div id="patient-search-step" class="fade-step">
+                            <h3 class="font-bold text-xl mb-4">Find Patient</h3>
+                            <form id="patientSearchForm" class="flex gap-2">
+                                <input type="text" id="searchNationalId" placeholder="Enter National ID or Phone..." class="w-full p-2 border rounded-md" required>
+                                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Search</button>
+                            </form>
+                            <button type="button" id="backToIntakeChoice1" class="mt-4 text-sm text-slate-500">← Back</button>
+                        </div>
+                        <!-- Step 2: Register New Patient / Confirm Details -->
+                        <div id="patient-details-step" class="fade-step">
+                            <h3 class="font-bold text-xl mb-4">Register Patient</h3>
+                            <form id="patientDetailsForm" class="space-y-3">
+                                <input type="hidden" id="patientNationalId">
+                                <input type="text" id="patientFullName" placeholder="Full Name" class="w-full p-2 border rounded-md" required>
+                                <input type="date" id="patientDob" class="w-full p-2 border rounded-md" required>
+                                <select id="patientGender" class="w-full p-2 border rounded-md" required>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <input type="tel" id="patientPhone" placeholder="Phone Number" class="w-full p-2 border rounded-md" required>
+                                <button type="submit" id="savePatientBtn" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md">Save & Proceed to Triage</button>
+                            </form>
+                            <button type="button" id="backToIntakeChoice2" class="mt-4 text-sm text-slate-500">← Back</button>
+                        </div>
+                        <!-- Step 3: Triage -->
+                        <div id="triage-symptoms-step" class="fade-step">
+                            <h3 class="font-bold text-xl mb-4">Triage for <span id="triagePatientName" class="text-[var(--color-primary)]"></span></h3>
+                            <form id="triageForm">
+                                <div class="mb-4">
+                                    <label class="font-semibold text-sm mb-2 block">Select Symptoms:</label>
+                                    <div id="symptom-checkboxes" class="grid grid-cols-2 gap-2 text-sm max-h-48 overflow-y-auto p-2 border rounded-md"></div>
+                                </div>
+                                <button type="submit" class="w-full bg-[var(--color-primary)] text-white font-semibold py-2 rounded-md">Complete Triage</button>
+                                <button type="button" id="backToIntakeChoice3" class="w-full mt-2 text-sm text-slate-500">Triage a Different Patient</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Staff Management Pane -->
+                    <div id="pane-staff" class="tab-pane hidden">
+                        <h3 class="font-bold text-xl mb-4">Manage Staff</h3>
+                        <form id="addStaffForm" class="space-y-4">
+                            <input type="text" id="workerId" placeholder="Worker ID (e.g., D002)" class="w-full p-2 border rounded-md" required>
+                            <input type="text" id="workerName" placeholder="Full Name" class="w-full p-2 border rounded-md" required>
+                            <select id="role" class="w-full p-2 border rounded-md" required>
+                                <option value="Doctor">Doctor</option>
+                                <option value="Nurse">Nurse</option>
+                            </select>
+                            <input type="number" id="maxLoad" placeholder="Max Patient Load" class="w-full p-2 border rounded-md" required>
+                            <button type="submit" class="w-full bg-[var(--color-primary)] text-white font-semibold py-2 rounded-md hover:bg-blue-800 transition">Add Staff</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Analytics & Staff Roster -->
+        <div class="grid lg:grid-cols-3 gap-8 mt-8">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="font-bold text-xl mb-4">Staff Workload Heatmap</h3>
+                <div id="staffWorkloadChart" class="min-h-[300px]"></div>
+            </div>
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-xl">Full Staff Roster</h3>
+                    <button id="downloadReportBtn" class="bg-green-600 text-white font-semibold text-sm py-2 px-4 rounded-md hover:bg-green-700 transition">Download Daily Report</button>
+                </div>
+                <div class="overflow-y-auto max-h-96">
+                    <table class="w-full text-sm text-left">
+                         <thead class="bg-slate-50 text-slate-600 uppercase sticky top-0">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Role</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Load</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffRosterTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = 'https://hmeu0cngy9.execute-api.us-east-1.amazonaws.com';
+        let currentPatientId = null;
+        // Intake step elements
+        const intakeChoiceStep = document.getElementById('intake-choice-step');
+        const searchStep = document.getElementById('patient-search-step');
+        const detailsStep = document.getElementById('patient-details-step');
+        const triageStep = document.getElementById('triage-symptoms-step');
+        const patientSearchForm = document.getElementById('patientSearchForm');
+        const patientDetailsForm = document.getElementById('patientDetailsForm');
+        const triageForm = document.getElementById('triageForm');
+        const addStaffForm = document.getElementById('addStaffForm');
+        // Intake choice buttons
+        const btnRegisterNew = document.getElementById('btn-register-new');
+        const btnFindExisting = document.getElementById('btn-find-existing');
+        const backToIntakeChoice1 = document.getElementById('backToIntakeChoice1');
+        const backToIntakeChoice2 = document.getElementById('backToIntakeChoice2');
+        const backToIntakeChoice3 = document.getElementById('backToIntakeChoice3');
+        // Tab logic
+        const tabs = document.querySelectorAll('.tab-btn');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('active', 'border-[var(--color-primary)]', 'text-[var(--color-primary)]');
+                    t.classList.add('border-transparent', 'text-slate-500');
+                });
+                tab.classList.add('active', 'border-[var(--color-primary)]', 'text-[var(--color-primary)]');
+                tab.classList.remove('border-transparent', 'text-slate-500');
+                const targetPane = document.getElementById(tab.id.replace('tab-', 'pane-'));
+                panes.forEach(p => p.classList.add('hidden'));
+                targetPane.classList.remove('hidden');
+                if (tab.id === 'tab-triage') showStep(intakeChoiceStep);
+            });
+        });
+        // Intake step navigation
+        function showStep(stepToShow) {
+            [intakeChoiceStep, searchStep, detailsStep, triageStep].forEach(step => {
+                step.classList.remove('active');
+                gsap.set(step, {autoAlpha: 0});
+            });
+            stepToShow.classList.add('active');
+            gsap.to(stepToShow, {autoAlpha: 1, duration: 0.3});
+        }
+        btnRegisterNew.addEventListener('click', () => {
+            document.getElementById('patientFullName').readOnly = false;
+            showStep(detailsStep);
+        });
+        btnFindExisting.addEventListener('click', () => showStep(searchStep));
+        backToIntakeChoice1.addEventListener('click', () => showStep(intakeChoiceStep));
+        backToIntakeChoice2.addEventListener('click', () => showStep(intakeChoiceStep));
+        backToIntakeChoice3.addEventListener('click', () => {
+            triageForm.reset();
+            showStep(intakeChoiceStep);
+        });
+        // Populate symptoms
+        function populateSymptoms() {
+            const symptoms = [
+                'Chest Pain', 'Fever', 'Headache', 'Cough', 'Abdominal Pain', 'Shortness of Breath',
+                'Nausea', 'Vomiting', 'Diarrhea', 'Dizziness', 'Fatigue', 'Rash', 'Seizure', 'Back Pain', 'Sore Throat'
+            ];
+            const container = document.getElementById('symptom-checkboxes');
+            container.innerHTML = symptoms.map(symptom => `
+                <div class="flex items-center">
+                    <input id="symptom-${symptom.replace(/ /g, '')}" name="symptoms" type="checkbox" value="${symptom}" class="h-4 w-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
+                    <label for="symptom-${symptom.replace(/ /g, '')}" class="ml-2 block text-gray-900">${symptom}</label>
+                </div>
+            `).join('');
+        }
+        // Patient search
+        patientSearchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const searchId = document.getElementById('searchNationalId').value;
+            try {
+                const response = await fetch(`${API_BASE_URL}/patients/${searchId}`);
+                if (response.ok) {
+                    const patientData = await response.json();
+                    currentPatientId = patientData.nationalId;
+                    document.getElementById('triagePatientName').textContent = patientData.fullName;
+                    showStep(triageStep);
+                } else {
+                    alert("Patient not found. Please register.");
+                    document.getElementById('patientNationalId').value = searchId;
+                    document.getElementById('patientFullName').readOnly = false;
+                    showStep(detailsStep);
+                }
+            } catch (error) {
+                console.error("Search error:", error);
+                alert("Error searching for patient.");
+            }
+        });
+        // Patient registration
+        patientDetailsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const patientData = {
+                nationalId: document.getElementById('patientNationalId').value,
+                fullName: document.getElementById('patientFullName').value,
+                dateOfBirth: document.getElementById('patientDob').value,
+                gender: document.getElementById('patientGender').value,
+                phoneNumber: document.getElementById('patientPhone').value,
+            };
+            try {
+                const response = await fetch(`${API_BASE_URL}/patients`, {
+                    method: 'POST',
+                    body: JSON.stringify(patientData),
+                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+                });
+                if (!response.ok) {
+                    let errText = await response.text();
+                    // Try to parse JSON error if possible
+                    try {
+                        const errJson = JSON.parse(errText);
+                        errText = errJson.error || errText;
+                    } catch {}
+                    throw new Error('Failed to save patient details. ' + errText);
+                }
+                currentPatientId = patientData.nationalId;
+                document.getElementById('triagePatientName').textContent = patientData.fullName;
+                showStep(triageStep);
+            } catch (error) {
+                console.error("Save patient error:", error);
+                alert("Error saving patient details.\n" + (error.message || ''));
+            }
+        });
+        // Triage form
+        triageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const selectedSymptoms = Array.from(document.querySelectorAll('input[name="symptoms"]:checked')).map(el => el.value);
+            if (selectedSymptoms.length === 0) {
+                alert('Please select at least one symptom.');
+                return;
+            }
+            const triageData = {
+                symptoms: selectedSymptoms,
+                nationalId: currentPatientId
+            };
+            try {
+                const response = await fetch(`${API_BASE_URL}/triage`, {
+                    method: 'POST',
+                    body: JSON.stringify(triageData),
+                    headers: {'Content-Type': 'application/json'}
+                });
+                if (!response.ok) throw new Error('Triage request failed.');
+                const result = await response.json();
+                alert(`Patient triaged successfully! Urgency: ${result.urgencyLevel}`);
+                triageForm.reset();
+                showStep(intakeChoiceStep);
+                fetchDashboardData();
+            } catch (error) {
+                console.error("Triage error:", error);
+                alert("Triage failed.");
+            }
+        });
+        // Staff form
+        addStaffForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const staffData = { 
+                workerId: document.getElementById('workerId').value, 
+                workerName: document.getElementById('workerName').value, 
+                role: document.getElementById('role').value, 
+                status: "AVAILABLE", 
+                maxLoad: parseInt(document.getElementById('maxLoad').value) 
+            };
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff`, { 
+                    method: 'POST', 
+                    body: JSON.stringify(staffData), 
+                    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'} 
+                });
+                if (!response.ok) {
+                    let errText = await response.text();
+                    try {
+                        const errJson = JSON.parse(errText);
+                        errText = errJson.error || errText;
+                    } catch {}
+                    throw new Error('Failed to add staff. ' + errText);
+                }
+                alert('Staff added successfully!');
+                e.target.reset();
+                fetchDashboardData();
+            } catch (error) {
+                console.error("Error adding staff:", error);
+                alert('Error adding staff.\n' + (error.message || ''));
+            }
+        });
+        // Dashboard
+        const fetchDashboardData = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/dashboard`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+            }
+        };
+        const updateDashboard = (data) => {
+            document.getElementById('stat-waiting').textContent = data.patient_queue_summary.pending_assignment || 0;
+            document.getElementById('stat-high-urgency').textContent = data.patient_queue_summary.high_urgency || 0;
+            const availableDoctors = data.staff_heatmap.filter(s => s.role === 'Doctor' && s.status === 'AVAILABLE').length;
+            const availableNurses = data.staff_heatmap.filter(s => s.role === 'Nurse' && s.status === 'AVAILABLE').length;
+            document.getElementById('stat-doctors').textContent = availableDoctors;
+            document.getElementById('stat-nurses').textContent = availableNurses;
+            const patientQueueBody = document.getElementById('patientQueueTableBody');
+            patientQueueBody.innerHTML = '';
+            const sortedPatients = data.live_patient_queue.sort((a,b) => (b.urgencyScore || 0) - (a.urgencyScore || 0));
+            sortedPatients.slice(0, 10).forEach(p => {
+                const urgencyClass = p.urgencyLevel ? p.urgencyLevel.toLowerCase() : 'low';
+                const row = `<tr><td class="p-3"><span class="status-dot bg-${urgencyClass} mr-2"></span>${p.urgencyLevel}</td><td class="p-3 font-mono">${p.patientId.substring(0, 8)}</td><td class="p-3">${p.status.replace('_', ' ')}</td><td class="p-3">${p.assignedWorkerId || '---'}</td></tr>`;
+                patientQueueBody.innerHTML += row;
+            });
+            const staffRosterBody = document.getElementById('staffRosterTableBody');
+            staffRosterBody.innerHTML = '';
+            const sortedStaff = data.staff_heatmap.sort((a,b) => a.workerId.localeCompare(b.workerId));
+            sortedStaff.forEach(s => {
+                const row = `<tr><td class="p-3 font-mono">${s.workerId}</td><td class="p-3">${s.name}</td><td class="p-3">${s.role}</td><td class="p-3">${s.status}</td><td class="p-3">${s.load}</td></tr>`;
+                staffRosterBody.innerHTML += row;
+            });
+            renderStaffChart(sortedStaff);
+        };
+        const renderStaffChart = (staffData) => {
+            const chartContainer = d3.select("#staffWorkloadChart");
+            chartContainer.html("");
+            if (!staffData || staffData.length === 0) return;
+            const margin = {top: 20, right: 30, bottom: 40, left: 90}, width = chartContainer.node().getBoundingClientRect().width - margin.left - margin.right, height = 300 - margin.top - margin.bottom;
+            const svg = chartContainer.append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            const y = d3.scaleBand().range([0, height]).domain(staffData.map(d => d.name)).padding(.1);
+            svg.append("g").call(d3.axisLeft(y));
+            const maxVal = d3.max(staffData, d => parseInt(d.load.split('/')[1])) || 5;
+            const x = d3.scaleLinear().domain([0, maxVal]).range([0, width]);
+            svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x));
+            svg.selectAll("myRect").data(staffData).join("rect").attr("y", d => y(d.name)).attr("x", x(0)).attr("width", d => x(parseInt(d.load.split('/')[0]))).attr("height", y.bandwidth()).attr("fill", d => d.role === "Doctor" ? "var(--color-primary)" : "var(--color-low)");
+        };
+        // Initial page load
+        populateSymptoms();
+        fetchDashboardData();
+        setInterval(fetchDashboardData, 15000);
+        // Show intake choice by default
+        showStep(intakeChoiceStep);
+    });
+    </script>
+</body>
+</html>

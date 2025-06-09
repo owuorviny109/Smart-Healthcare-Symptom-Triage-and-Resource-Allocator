@@ -1,0 +1,1034 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ProcessTriageLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-processTriage"
+      }
+    },
+    "AssignWorkerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-assignWorker"
+      }
+    },
+    "GetDashboardDataLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-getDashboardData"
+      }
+    },
+    "GenerateReportLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-generateReport"
+      }
+    },
+    "ManageStaffLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-manageStaff"
+      }
+    },
+    "ManagePatientLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/triage-ai-system-dev-managePatient"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "triage-ai-system",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/triage-ai-system-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/triage-ai-system-dev*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:Scan",
+                    "dynamodb:PutItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:Query"
+                  ],
+                  "Resource": "arn:aws:dynamodb:us-east-1:977099027029:table/*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": "arn:aws:s3:::triage-ai-reports-977099027029/*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "triage-ai-system",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "ProcessTriageLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/processTriage.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-processTriage",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "ProcessTriageLogGroup"
+      ]
+    },
+    "AssignWorkerLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/assignWorker.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-assignWorker",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AssignWorkerLogGroup"
+      ]
+    },
+    "GetDashboardDataLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/getDashboardData.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-getDashboardData",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "GetDashboardDataLogGroup"
+      ]
+    },
+    "GenerateReportLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/generateReport.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-generateReport",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "GenerateReportLogGroup"
+      ]
+    },
+    "ManageStaffLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/manageStaff.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-manageStaff",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "ManageStaffLogGroup"
+      ]
+    },
+    "ManagePatientLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-37a25799-966e",
+          "S3Key": "serverless/triage-ai-system/dev/1749506865977-2025-06-09T22:07:45.977Z/triage-ai-system.zip"
+        },
+        "Handler": "src/managePatient.lambda_handler",
+        "Runtime": "python3.9",
+        "FunctionName": "triage-ai-system-dev-managePatient",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "QUEUE_TABLE": "triage-ai-queue-table",
+            "RULES_TABLE": "triage-ai-rules-table",
+            "SCHEDULE_TABLE": "triage-ai-worker-schedule-table",
+            "REPORTS_BUCKET": "triage-ai-reports-977099027029",
+            "PATIENTS_TABLE": "triage-ai-patients-table"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "ManagePatientLogGroup"
+      ]
+    },
+    "ProcessTriageLambdaVersionwsxNS3TTJUDfoZVXT2Fv3yPG8UrQiLHvCKIYmyKd5Q": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ProcessTriageLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "AssignWorkerLambdaVersioncSegZsODoZ0Q8Ou0wmP7IbdETbHAnmOomJtUVHqDqSg": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AssignWorkerLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "GetDashboardDataLambdaVersionJKFpZF6bZvFz2hJmnQVldPXIMheInwQ3JDnMJiXNmxs": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "GetDashboardDataLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "GenerateReportLambdaVersionnoSpTradfmwd4ICg8dztPOvqPIXui8tsaJchwtRj4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "GenerateReportLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "ManageStaffLambdaVersionOtTxxv8Pk5KbBf4M7KbqM71GS0TKt39NsTpGbck": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ManageStaffLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "ManagePatientLambdaVersion4fNgYEV4tvVNdeduOqOmAyMF8q6FLQ6LP2nPA3GYg": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ManagePatientLambdaFunction"
+        },
+        "CodeSha256": "P/6xxkbFqyEpi5LNoJqrJedbbsFoNPG91fPtDVIj7VA="
+      }
+    },
+    "AssignWorkerEventsRuleSchedule1": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": "rate(1 minute)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AssignWorkerLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Id": "assignWorkerSchedule"
+          }
+        ]
+      }
+    },
+    "AssignWorkerLambdaPermissionEventsRuleSchedule1": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AssignWorkerLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "AssignWorkerEventsRuleSchedule1",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "GenerateReportEventsRuleSchedule1": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": "cron(0 2 * * ? *)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "GenerateReportLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Id": "generateReportSchedule"
+          }
+        ]
+      }
+    },
+    "GenerateReportLambdaPermissionEventsRuleSchedule1": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GenerateReportLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "GenerateReportEventsRuleSchedule1",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "dev-triage-ai-system",
+        "ProtocolType": "HTTP",
+        "CorsConfiguration": {
+          "AllowHeaders": [
+            "Content-Type"
+          ],
+          "AllowMethods": [
+            "GET",
+            "POST",
+            "OPTIONS"
+          ],
+          "AllowOrigins": [
+            "*"
+          ],
+          "MaxAge": 86400
+        }
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": false
+        }
+      }
+    },
+    "ProcessTriageLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ProcessTriageLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationProcessTriage": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ProcessTriageLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostTriage": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /triage",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationProcessTriage"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationProcessTriage"
+    },
+    "GetDashboardDataLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetDashboardDataLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationGetDashboardData": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "GetDashboardDataLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteGetDashboard": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /dashboard",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationGetDashboardData"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationGetDashboardData"
+    },
+    "ManageStaffLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ManageStaffLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationManageStaff": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ManageStaffLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostStaff": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /staff",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationManageStaff"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationManageStaff"
+    },
+    "HttpApiRouteGetStaff": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /staff",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationManageStaff"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationManageStaff"
+    },
+    "ManagePatientLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ManagePatientLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationManagePatient": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ManagePatientLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteGetPatientsNationalidVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /patients/{nationalId}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationManagePatient"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationManagePatient"
+    },
+    "HttpApiRoutePostPatients": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /patients",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationManagePatient"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationManagePatient"
+    },
+    "TriageQueueTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "triage-ai-queue-table",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "triageId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "triageId",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "TriageRulesTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "triage-ai-rules-table",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "symptom",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "symptom",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "WorkerScheduleTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "triage-ai-worker-schedule-table",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "workerId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "workerId",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "ReportsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "triage-ai-reports-977099027029",
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*"
+              ],
+              "AllowedMethods": [
+                "GET"
+              ],
+              "AllowedOrigins": [
+                "*"
+              ],
+              "MaxAge": 3000
+            }
+          ]
+        }
+      }
+    },
+    "PatientsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "triage-ai-patients-table",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "nationalId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "nationalId",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": "serverless-framework-deployments-us-east-1-37a25799-966e",
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "ProcessTriageLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ProcessTriageLambdaVersionwsxNS3TTJUDfoZVXT2Fv3yPG8UrQiLHvCKIYmyKd5Q"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-ProcessTriageLambdaFunctionQualifiedArn"
+      }
+    },
+    "AssignWorkerLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AssignWorkerLambdaVersioncSegZsODoZ0Q8Ou0wmP7IbdETbHAnmOomJtUVHqDqSg"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-AssignWorkerLambdaFunctionQualifiedArn"
+      }
+    },
+    "GetDashboardDataLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "GetDashboardDataLambdaVersionJKFpZF6bZvFz2hJmnQVldPXIMheInwQ3JDnMJiXNmxs"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-GetDashboardDataLambdaFunctionQualifiedArn"
+      }
+    },
+    "GenerateReportLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "GenerateReportLambdaVersionnoSpTradfmwd4ICg8dztPOvqPIXui8tsaJchwtRj4"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-GenerateReportLambdaFunctionQualifiedArn"
+      }
+    },
+    "ManageStaffLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ManageStaffLambdaVersionOtTxxv8Pk5KbBf4M7KbqM71GS0TKt39NsTpGbck"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-ManageStaffLambdaFunctionQualifiedArn"
+      }
+    },
+    "ManagePatientLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ManagePatientLambdaVersion4fNgYEV4tvVNdeduOqOmAyMF8q6FLQ6LP2nPA3GYg"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-ManagePatientLambdaFunctionQualifiedArn"
+      }
+    },
+    "HttpApiId": {
+      "Description": "Id of the HTTP API",
+      "Value": {
+        "Ref": "HttpApi"
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-HttpApiId"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      },
+      "Export": {
+        "Name": "sls-triage-ai-system-dev-HttpApiUrl"
+      }
+    }
+  }
+}
