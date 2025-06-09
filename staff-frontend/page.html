@@ -3,48 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TriageAI | World-Class Healthcare Management System</title>
+  <title>TriageAI | Evidence-Based Healthcare Management</title>
   
-  <!-- Libraries loaded in Head for reliability -->
+  <!-- Core Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+  <!-- Optimized Font Loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"></noscript>
   
   <style>
     :root {
-        --color-primary: #0d47a1; /* Deep Blue */
-        --color-accent: #FFD700;  /* Gold */
-        --color-secondary: #f8fafc; /* Slate 50 */
-        --color-text: #334155;     /* Slate 700 */
-        --color-emergency: #e53935; /* Vibrant Red */
+        --color-primary: #0d47a1;
+        --color-accent: #FFD700;
+        --color-secondary: #f8fafc;
+        --color-text: #334155;
+        --color-emergency: #e53935;
     }
-    body { font-family: 'Poppins', sans-serif; background-color: var(--color-secondary); color: var(--color-text); opacity: 0; transition: opacity 0.5s ease-in; }
-    .btn { transition: all 0.2s ease-in-out; }
-    .btn-primary { background-color: var(--color-primary); color: white; }
-    .btn-primary:hover { background-color: #0b3a80; box-shadow: 0 7px 20px -5px rgba(13, 71, 161, 0.4); transform: translateY(-3px); }
-    .btn-accent { background-color: var(--color-accent); color: var(--color-primary); font-weight: 600; }
-    .btn-accent:hover { background-color: #e6c200; box-shadow: 0 7px 20px -5px rgba(255, 215, 0, 0.4); transform: translateY(-3px); }
+    html { --scroll-behavior: smooth!important; scroll-behavior: smooth!important; }
+    body { 
+        font-family: 'Poppins', sans-serif; background-color: var(--color-secondary); color: var(--color-text);
+        opacity: 0; transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    body.modal-open { overflow: hidden; }
+    .page-loaded body { opacity: 1; }
+
+    /* --- Preloader & Animations --- */
+    #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--color-primary); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
+    #preloader.fade-out { opacity: 0; transform: scale(0.9); }
+    #loader-svg { width: 100px; height: 100px; }
+    #loader-svg .pulse-circle { stroke-dasharray: 251.2; stroke-dashoffset: 251.2; animation: draw-circle 2s ease-in-out forwards; }
+    #loader-svg .heartbeat-line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-line 1.5s 0.5s ease-in-out forwards, pulse-line 1.5s 2s infinite ease-in-out; }
+    @keyframes draw-circle { to { stroke-dashoffset: 0; } }
+    @keyframes draw-line { to { stroke-dashoffset: 0; } }
+    @keyframes pulse-line { 50% { stroke-width: 4; } }
+
+    .btn { position: relative; overflow: hidden; transition: all 0.3s ease-in-out; will-change: transform; }
+    .btn-primary:hover, .btn-accent:hover { transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2); }
     .nav-link { position: relative; transition: color 0.2s; color: #475569; }
     .nav-link:after { content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background-color: var(--color-primary); transition: width 0.3s; }
     .nav-link:hover { color: var(--color-primary); }
     .nav-link:hover:after { width: 100%; }
-    .tag { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; background-color: #e3f2fd; color: #0d47a1; border-radius: 9999px; font-weight: 500; margin: 0.25rem; animation: fadeInUp 0.3s; }
-    .tag-remove { margin-left: 0.5rem; cursor: pointer; font-weight: bold; }
+
+    .ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.3); transform: scale(0); animation: ripple-effect 0.6s linear; }
+    @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
+
     .floating-icon { position: absolute; opacity: 0.1; pointer-events: none; }
+    
+    #body-map-container { transition: transform 0.3s ease; }
+    #body-map-container:hover { transform: scale(1.05); }
     #body-map svg path { cursor: pointer; fill: #dbeafe; stroke: #93c5fd; transition: fill 0.2s ease-in-out; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .tag { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; background-color: #e3f2fd; color: #0d47a1; border-radius: 9999px; font-weight: 500; margin: 0.25rem; }
+    .tag-remove { margin-left: 0.5rem; cursor: pointer; font-weight: bold; }
     @keyframes pulse-voice { 0%, 100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); } }
     .voice-active { animation: pulse-voice 2s infinite; }
+    
+    /* --- Research Section & Modal Styles --- */
+    .research-tab { transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
+    .research-tab.active { background-color: white; color: var(--color-primary); border-color: var(--color-primary); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); }
+    .research-content-pane { display: none; }
+    .research-content-pane.active { display: block; }
+    
+    #service-modal { visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s ease; }
+    #service-modal.is-open { visibility: visible; opacity: 1; transition: visibility 0s 0s, opacity 0.3s ease; }
+    .modal-content { max-height: 90vh; }
+    .modal-tab { transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+    .modal-tab.active { background-color: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .modal-pane { display: none; }
+    .modal-pane.active { display: block; }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
   </style>
 </head>
-<body class="text-slate-700">
+<body class="bg-slate-50 text-slate-700">
 
-  <!-- Header & Navigation -->
+  <div id="preloader">
+      <svg id="loader-svg" viewBox="0 0 100 100">
+        <circle class="pulse-circle" cx="50" cy="50" r="40" fill="none" stroke="var(--color-accent)" stroke-width="2"/>
+        <path class="heartbeat-line" d="M20 50 H 35 L 42 40 L 50 60 L 58 45 L 65 50 H 80" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+  </div>
+
   <header class="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 left-0 w-full z-50">
     <div class="max-w-screen-xl mx-auto px-6">
       <div class="flex justify-between items-center py-4">
@@ -56,64 +103,169 @@
           <a href="#services" class="nav-link">Services</a>
           <a href="#triage" class="nav-link">Patient Triage</a>
           <a href="#professionals" class="nav-link">For Professionals</a>
-          <a href="staff-auth.html?register=1" class="btn btn-primary px-6 py-2 rounded-full">Staff Portal</a>
+          <a href="staff-auth.html" class="btn btn-primary px-6 py-2 rounded-full">Staff Portal</a>
         </nav>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- Hero Section -->
-    <section id="home" class="relative min-h-[90vh] flex items-center justify-center text-white text-center overflow-hidden" style="background-image: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2940&auto=format&fit=crop'); background-size: cover; background-position: center;">
+    <section id="home" class="relative min-h-[90vh] flex items-center justify-center text-white text-center overflow-hidden">
+        <picture class="absolute inset-0 w-full h-full">
+            <source srcset="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2940&auto=format&fit=crop&fm=webp" type="image/webp">
+            <img id="hero-bg" src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2940&auto=format&fit=crop" alt="Doctor using a tablet" class="w-full h-full object-cover">
+        </picture>
       <div class="absolute inset-0 bg-[var(--color-primary)] opacity-60"></div>
       <svg class="floating-icon text-white w-16 h-16" style="top: 15%; left: 10%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
       <svg class="floating-icon text-white w-24 h-24" style="top: 20%; right: 15%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-      <svg class="floating-icon text-white w-12 h-12" style="bottom: 20%; left: 25%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
       <div class="relative max-w-4xl mx-auto px-6">
         <h1 class="hero-title text-4xl md:text-6xl font-bold leading-tight" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">World-Class Care,</h1>
         <h1 class="hero-title text-4xl md:text-6xl font-bold leading-tight text-[var(--color-accent)]" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Intelligently Delivered.</h1>
-        <p class="hero-subtitle mt-6 text-lg text-slate-200 max-w-2xl mx-auto">A revolutionary AI platform, built for the AWS Lambda Hackathon, to solve the triage crisis at Mama Lucy Hospital and beyond.</p>
+        <p class="hero-subtitle mt-6 text-lg text-slate-200 max-w-2xl mx-auto">A revolutionary AI platform, built on real-world evidence to solve the triage crisis at Mama Lucy Hospital and beyond.</p>
         <div class="mt-10 flex flex-wrap justify-center gap-4">
-          <a href="#triage" class="btn btn-accent px-8 py-3 rounded-full font-semibold text-lg">Begin Patient Triage</a>
+          <a href="#triage" id="magnetic-btn" class="btn btn-accent px-8 py-3 rounded-full font-semibold text-lg">Begin Patient Triage</a>
         </div>
       </div>
     </section>
 
-    <!-- Statistics Section -->
     <section class="py-20 bg-white">
         <div class="max-w-screen-xl mx-auto px-6">
-            <div class="text-center mb-12"><h2 class="text-3xl font-bold text-slate-900">The State of Care at Mama Lucy Hospital</h2><p class="mt-4 text-slate-600">Addressing the critical numbers with a smart, scalable solution.</p></div>
+            <div class="text-center mb-12"><h2 class="text-3xl font-bold text-slate-900">The State of Care: An Evidence-Based Look</h2><p class="mt-4 text-slate-600">Addressing the critical numbers documented at Mama Lucy Kibaki Hospital.</p></div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div><p class="text-5xl font-bold text-blue-600" id="stat-patients">0</p><p class="mt-2 text-slate-500 font-medium">Patients Per Month</p></div>
-                <div><p class="text-5xl font-bold text-red-500" id="stat-wait-time">0</p><p class="mt-2 text-slate-500 font-medium">Hour Max Wait Time</p></div>
-                <div><p class="text-5xl font-bold text-amber-500" id="stat-staff">0</p><p class="mt-2 text-slate-500 font-medium">Staff Per Shift (Avg)</p></div>
+                <div class="stat-item"><p class="text-5xl font-bold text-blue-600" id="stat-patients">0</p><p class="mt-2 text-slate-500 font-medium">Outpatients Per Month</p></div>
+                <div class="stat-item"><p class="text-5xl font-bold text-red-500" id="stat-beds">0</p><p class="mt-2 text-slate-500 font-medium">Bed Capacity</p></div>
+                <div class="stat-item"><p class="text-5xl font-bold text-amber-500" id="stat-staff">0</p><p class="mt-2 text-slate-500 font-medium">Total Clinical Staff</p></div>
             </div>
         </div>
     </section>
-
-    <!-- Services Section -->
-    <section id="services" class="relative py-20 bg-cover bg-center bg-fixed" style="background-image: url('https://images.unsplash.com/photo-1538688423619-a8342f2ba325?q=80&w=2831&auto=format&fit=crop');">
-      <!-- Dark blue overlay for text readability -->
-      <div class="absolute inset-0 bg-[var(--color-primary)] opacity-90"></div>
-      
-      <div class="relative max-w-screen-xl mx-auto px-6 z-10">
+    
+    <section id="research" class="py-24" style="background: linear-gradient(180deg, var(--color-secondary) 0%, #eef5ff 100%);">
+      <div class="max-w-6xl mx-auto px-6">
         <div class="text-center mb-16">
-          <h2 class="text-4xl font-bold text-white" style="text-shadow: 0 1px 3px rgba(0,0,0,0.3);">A Complete Clinical Operations System</h2>
-          <p class="mt-4 text-slate-200 max-w-2xl mx-auto">From patient intake to staff management, TriageAI provides an end-to-end solution built on a foundation of data and intelligence.</p>
+          <h2 id="research-title" class="text-4xl font-bold text-slate-900">Grounded in Research: Why TriageAI is Necessary</h2>
+          <p id="research-subtitle" class="mt-4 text-slate-600 max-w-3xl mx-auto">Our solution is directly informed by the 2015 peer-reviewed study on the operational challenges at Mama Lucy Kibaki Hospital.</p>
         </div>
-        <div class="grid md:grid-cols-3 gap-8">
-            <!-- Cards now have an accent border to pop against the blue overlay -->
-            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-accent)]"><h3 class="text-xl font-semibold mb-2 text-slate-800">AI-Powered Triage Engine</h3><p class="text-slate-600">Utilizes AWS Comprehend Medical and custom logic based on MOH protocols to deliver instant, accurate urgency scores.</p></div>
-            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-accent)]"><h3 class="text-xl font-semibold mb-2 text-slate-800">Smart Staff Allocation</h3><p class="text-slate-600">Our algorithm analyzes staff roles, availability, and real-time workload to make intelligent patient assignments.</p></div>
-            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-accent)]"><h3 class="text-xl font-semibold mb-2 text-slate-800">Real-Time Dashboards</h3><p class="text-slate-600">Live visualizations of patient queues, staff heatmaps, and emergency alerts for unmatched operational awareness.</p></div>
+        
+        <div id="research-component" class="grid md:grid-cols-3 gap-8 items-start">
+          <div class="md:col-span-1 flex flex-col space-y-4">
+            <button class="research-tab active flex items-center text-left w-full p-4 rounded-lg border-2 border-transparent" data-tab="1">
+              <svg class="h-8 w-8 text-red-500 shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <div>
+                <h4 class="font-semibold text-slate-800">Operational Inefficiency</h4>
+                <p class="text-sm text-slate-500">Long queues & lack of privacy.</p>
+              </div>
+            </button>
+            <button class="research-tab flex items-center text-left w-full p-4 rounded-lg border-2 border-transparent" data-tab="2">
+              <svg class="h-8 w-8 text-red-500 shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+              <div>
+                <h4 class="font-semibold text-slate-800">Staffing & Skill Gaps</h4>
+                <p class="text-sm text-slate-500">Untrained staff & poor attitudes.</p>
+              </div>
+            </button>
+            <button class="research-tab flex items-center text-left w-full p-4 rounded-lg border-2 border-transparent" data-tab="3">
+              <svg class="h-8 w-8 text-red-500 shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+              <div>
+                <h4 class="font-semibold text-slate-800">Information & Resource Gaps</h4>
+                <p class="text-sm text-slate-500">Lack of patient-facing materials.</p>
+              </div>
+            </button>
+          </div>
+          
+          <div class="md:col-span-2 bg-white p-8 rounded-xl shadow-lg border border-slate-200 relative overflow-hidden min-h-[350px]">
+            <div class="research-content-pane active" data-content="1">
+              <h3 class="text-xl font-bold text-slate-800 mb-4">Problem: Operational Inefficiencies</h3>
+              <blockquote class="relative border-l-4 border-red-200 pl-8 mb-6 text-slate-600 italic">
+                <svg class="h-8 w-8 text-red-100 absolute -left-1 top-0" fill="currentColor" viewBox="0 0 32 32"><path d="M10.375 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM21.625 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM6 9.281v13.344c0 1.688 1.344 3.031 3 3.031h14c1.656 0 3-1.344 3-3.031V9.281c0-1.688-1.344-3.031-3-3.031h-2.125c-0.813-2.219-2.844-3.75-5.219-3.75h-1.281c-2.375 0-4.438 1.531-5.219 3.75h-2.156c-1.656 0-3 1.344-3 3.031z"></path></svg>
+                "Majority felt that the queues were too long... and would feel more comfortable if they were attended to in a separate room."
+              </blockquote>
+              <div class="flex items-start space-x-4 mt-6">
+                <svg class="h-6 w-6 text-green-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <h4 class="font-semibold text-slate-800">TriageAI's Solution: Automated Queues & Digital Intake</h4>
+                  <p class="text-slate-600">Our kiosk-based system automates the queue, providing real-time wait estimates and a structured process that enhances patient privacy and reduces perceived wait times.</p>
+                </div>
+              </div>
+            </div>
+            <div class="research-content-pane absolute top-0 left-0 p-8" data-content="2">
+              <h3 class="text-xl font-bold text-slate-800 mb-4">Problem: Staffing & Skill Gaps</h3>
+              <blockquote class="relative border-l-4 border-red-200 pl-8 mb-6 text-slate-600 italic">
+                 <svg class="h-8 w-8 text-red-100 absolute -left-1 top-0" fill="currentColor" viewBox="0 0 32 32"><path d="M10.375 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM21.625 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM6 9.281v13.344c0 1.688 1.344 3.031 3 3.031h14c1.656 0 3-1.344 3-3.031V9.281c0-1.688-1.344-3.031-3-3.031h-2.125c-0.813-2.219-2.844-3.75-5.219-3.75h-1.281c-2.375 0-4.438 1.531-5.219 3.75h-2.156c-1.656 0-3 1.344-3 3.031z"></path></svg>
+                "Provider attitude was cited by 75% of adolescents as a barrier... 98% of the staff indicated that they have never been trained specifically on adolescent health issues."
+              </blockquote>
+              <div class="flex items-start space-x-4 mt-6">
+                <svg class="h-6 w-6 text-green-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <h4 class="font-semibold text-slate-800">TriageAI's Solution: Intelligent Staff Allocation</h4>
+                  <p class="text-slate-600">Our algorithm standardizes triage based on MOH guidelines and allocates patients to the right staff, ensuring skill-based assignments and reducing the impact of individual provider bias or attitude.</p>
+                </div>
+              </div>
+            </div>
+            <div class="research-content-pane absolute top-0 left-0 p-8" data-content="3">
+              <h3 class="text-xl font-bold text-slate-800 mb-4">Problem: Information & Resource Gaps</h3>
+              <blockquote class="relative border-l-4 border-red-200 pl-8 mb-6 text-slate-600 italic">
+                 <svg class="h-8 w-8 text-red-100 absolute -left-1 top-0" fill="currentColor" viewBox="0 0 32 32"><path d="M10.375 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM21.625 22.094c1.406 0 2.594-1.188 2.594-2.594 0-1.438-1.188-2.594-2.594-2.594s-2.594 1.156-2.594 2.594c0 1.406 1.188 2.594 2.594 2.594zM6 9.281v13.344c0 1.688 1.344 3.031 3 3.031h14c1.656 0 3-1.344 3-3.031V9.281c0-1.688-1.344-3.031-3-3.031h-2.125c-0.813-2.219-2.844-3.75-5.219-3.75h-1.281c-2.375 0-4.438 1.531-5.219 3.75h-2.156c-1.656 0-3 1.344-3 3.031z"></path></svg>
+                "The hospital is not fully equipped with information resources... they prefer to learn about sensitive issues on their own."
+              </blockquote>
+              <div class="flex items-start space-x-4 mt-6">
+                <svg class="h-6 w-6 text-green-500 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <h4 class="font-semibold text-slate-800">TriageAI's Solution: Empowerment Through Information</h4>
+                  <p class="text-slate-600">The interactive symptom analyzer provides a private, self-directed way for patients to explore their health concerns. Clear, concise results empower them with knowledge before they even see a doctor.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Patient Triage Section with Body Map -->
+    <section id="services" class="relative py-24 overflow-hidden bg-cover bg-center bg-fixed" style="background-image: url('https://images.unsplash.com/photo-1538688423619-a8342f2ba325?q=80&w=2831&auto=format&fit=crop');">
+      <div class="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)] via-blue-800 to-slate-900 opacity-90"></div>
+      <div class="relative max-w-screen-xl mx-auto px-6 z-10" style="transform-style: preserve-3d;">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl font-bold text-white tracking-tight" style="text-shadow: 0 2px 4px rgba(0,0,0,0.3);">The TriageAI Clinical Operating System</h2>
+          <p class="mt-4 text-slate-200 max-w-3xl mx-auto text-lg">We go beyond simple triage. TriageAI is an integrated platform designed to bring clarity, efficiency, and data-driven decisions to every level of hospital operations.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div class="service-card flex flex-col bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg p-8 text-center text-white transition-all duration-300 hover:bg-white/20">
+            <div class="flex-grow">
+              <div class="icon-wrapper mb-4 bg-white/10 p-4 rounded-full mx-auto w-fit"><svg class="h-8 w-8 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg></div>
+              <h3 class="text-xl font-bold mb-2">Instant, AI-Powered Triage</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">Our engine uses a custom rule-based algorithm to instantly convert symptoms into clear, actionable urgency scores.</p>
+            </div>
+            <button class="read-more-btn btn mt-6 bg-white/20 text-white font-semibold py-2 px-6 rounded-full border border-white/30 hover:bg-white/30" data-service="triage">Learn More</button>
+          </div>
+          <div class="service-card flex flex-col bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg p-8 text-center text-white transition-all duration-300 hover:bg-white/20">
+            <div class="flex-grow">
+              <div class="icon-wrapper mb-4 bg-white/10 p-4 rounded-full mx-auto w-fit"><svg class="h-8 w-8 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962a3.75 3.75 0 015.962 0L14.25 6h5.25M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg></div>
+              <h3 class="text-xl font-bold mb-2">Intelligent Resource Allocation</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">Automatically assigns patients to the right staff based on urgency, role, availability, and current patient load.</p>
+            </div>
+            <button class="read-more-btn btn mt-6 bg-white/20 text-white font-semibold py-2 px-6 rounded-full border border-white/30 hover:bg-white/30" data-service="allocation">Learn More</button>
+          </div>
+          <div class="service-card flex flex-col bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg p-8 text-center text-white transition-all duration-300 hover:bg-white/20">
+            <div class="flex-grow">
+              <div class="icon-wrapper mb-4 bg-white/10 p-4 rounded-full mx-auto w-fit"><svg class="h-8 w-8 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg></div>
+              <h3 class="text-xl font-bold mb-2">Unified Command Center</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">Live dashboards give supervisors a bird's-eye view of queues, staff workload heatmaps, and critical alerts.</p>
+            </div>
+            <button class="read-more-btn btn mt-6 bg-white/20 text-white font-semibold py-2 px-6 rounded-full border border-white/30 hover:bg-white/30" data-service="dashboard">Learn More</button>
+          </div>
+          <div class="service-card flex flex-col bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg p-8 text-center text-white transition-all duration-300 hover:bg-white/20">
+            <div class="flex-grow">
+              <div class="icon-wrapper mb-4 bg-white/10 p-4 rounded-full mx-auto w-fit"><svg class="h-8 w-8 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM21 21l-5.2-5.2" /></svg></div>
+              <h3 class="text-xl font-bold mb-2">Actionable Analytics</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">Daily S3 reports turn raw operational data into actionable insights for optimizing staffing and patient flow over time.</p>
+            </div>
+            <button class="read-more-btn btn mt-6 bg-white/20 text-white font-semibold py-2 px-6 rounded-full border border-white/30 hover:bg-white/30" data-service="analytics">Learn More</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="triage" class="py-24 bg-white">
         <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-            <div class="text-left">
+            <div id="triage-left-col">
                 <h2 class="text-4xl font-bold text-slate-900">Interactive Symptom Analyzer</h2>
                 <p class="mt-4 mb-8 text-slate-600">A faster, more intuitive way to provide care information. Click on the body map, use voice commands, or type your symptoms to begin.</p>
                 <form id="triage-form" class="space-y-6 text-left bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-lg">
@@ -124,10 +276,10 @@
                     <div id="symptom-tags" class="flex flex-wrap gap-2 min-h-[44px] bg-white p-2 rounded-lg border"></div>
                     <button type="submit" class="w-full btn btn-primary px-4 py-3 rounded-full text-lg font-semibold">Analyze Symptoms</button>
                 </form>
-                <div id="triage-result" class="mt-6 text-left bg-white p-6 rounded-lg shadow-md border hidden"></div>
+                <div id="triage-result" class="mt-6 text-left bg-white p-6 rounded-lg shadow-md border opacity-0 -translate-y-4"></div>
             </div>
-            <div id="body-map" class="w-full h-full flex items-center justify-center">
-                <svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+            <div id="body-map-container" class="w-full h-full flex items-center justify-center">
+                <svg id="body-map" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
                     <g id="body-parts" transform="translate(10, 10)">
                         <path id="head" data-symptom="Headache" d="M75 5 a 45 45 0 1 1 0.1 0 z" />
                         <path id="chest" data-symptom="Chest Pain" d="M50 80 h 90 v 60 h -90 Z" />
@@ -142,20 +294,19 @@
         </div>
     </section>
 
-    <!-- For Professionals Section with D3.js -->
     <section id="professionals" class="py-24 bg-slate-50">
       <div class="max-w-6xl mx-auto px-6">
         <div class="text-center mb-16"><h2 class="text-4xl font-bold text-slate-900">The Professional's Command Center</h2><p class="mt-4 text-slate-600 max-w-2xl mx-auto">Empowering healthcare staff with the data and tools needed for decisive action.</p></div>
         <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-2xl">
             <h3 class="font-bold text-2xl mb-4 text-slate-800">Live Patient Queue & Staff Heatmap</h3>
             <div class="grid md:grid-cols-3 gap-8">
-                <div id="d3-queue-chart" class="md:col-span-2 min-h-[300px] bg-slate-100 rounded-lg p-4 border"></div>
+                <div id="d3-queue-chart" class="md:col-span-2 min-h-[350px] bg-slate-100 rounded-lg p-4 border"></div>
                 <div id="staff-heatmap" class="space-y-4">
                     <h4 class="font-semibold text-lg">Staff Status</h4>
-                    <div class="p-4 bg-green-100 text-green-800 rounded-lg"><strong>Dr. Kamau:</strong> Available <span class="font-mono">(2/5 Cases)</span></div>
-                    <div class="p-4 bg-amber-100 text-amber-800 rounded-lg"><strong>Dr. Omondi:</strong> Nearing Capacity <span class="font-mono">(4/5 Cases)</span></div>
-                    <div class="p-4 bg-red-100 text-red-800 rounded-lg"><strong>Nurse Achieng:</strong> At Capacity <span class="font-mono">(10/10 Cases)</span></div>
-                    <div class="p-4 bg-slate-200 text-slate-600 rounded-lg"><strong>Dr. Wanjiku:</strong> On Break</div>
+                    <div class="staff-status-item p-4 bg-green-100 text-green-800 rounded-lg"><strong>Dr. Kamau:</strong> Available <span class="font-mono">(2/5 Cases)</span></div>
+                    <div class="staff-status-item p-4 bg-amber-100 text-amber-800 rounded-lg"><strong>Dr. Omondi:</strong> Nearing Capacity <span class="font-mono">(4/5 Cases)</span></div>
+                    <div class="staff-status-item p-4 bg-red-100 text-red-800 rounded-lg"><strong>Nurse Achieng:</strong> At Capacity <span class="font-mono">(10/10 Cases)</span></div>
+                    <div class="staff-status-item p-4 bg-slate-200 text-slate-600 rounded-lg"><strong>Dr. Wanjiku:</strong> On Break</div>
                 </div>
             </div>
              <div class="mt-8 text-center">
@@ -167,116 +318,260 @@
   
   </main>
 
+  <div id="service-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+    <div id="modal-panel" class="modal-content bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div class="flex justify-between items-center p-6 border-b">
+        <h2 id="modal-title" class="text-2xl font-bold text-slate-800">Service Details</h2>
+        <button id="modal-close-btn" class="text-slate-400 hover:text-slate-800 transition">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="flex-grow p-6 overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div id="modal-tabs" class="md:col-span-1 flex flex-col space-y-2"></div>
+          <div id="modal-panes" class="md:col-span-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center text-sm py-8 bg-[var(--color-primary)] text-slate-300">
-    <p>© 2025 TriageAI. All rights reserved.</p>
-    <p class="mt-1">A demonstration project for the AWS Lambda Hackathon, inspired by the needs of Mama Lucy Kibaki Hospital.</p>
+      <p>© 2025 TriageAI. All rights reserved.</p>
+      <p class="mt-1">A demonstration project for the AWS Lambda Hackathon, inspired by the needs of Mama Lucy Kibaki Hospital.</p>
   </footer>
 
   <script>
-    // Self-executing function to avoid polluting the global scope
     (() => {
-        // --- 1. DEFINE ALL YOUR FUNCTIONS FIRST ---
-
+        gsap.registerPlugin(ScrollTrigger);
         const onReady = (callback) => {
             if (document.readyState !== 'loading') callback();
             else document.addEventListener('DOMContentLoaded', callback);
         };
 
+        const modalData = {
+          triage: {
+            title: "Instant, AI-Powered Triage",
+            tabs: [{ id: 'how', name: 'How It Works' }, { id: 'impact', name: 'Benefits & Impact' }],
+            panes: {
+              how: `<h4 class="font-bold text-lg mb-2">Streamlined Patient Intake</h4><p class="mb-4">Our triage engine simplifies and accelerates the first point of contact for every patient, ensuring immediate attention and accurate prioritization.</p><ol class="list-decimal list-inside space-y-3 text-slate-600"><li><strong>Symptom Submission:</strong> A patient uses a kiosk to quickly enter their symptoms through an intuitive interface.</li><li><strong>Instant Analysis:</strong> Our serverless AI engine, aligned with Kenya MOH guidelines, analyzes the symptoms in milliseconds to calculate an urgency score.</li><li><strong>Clear Prioritization:</strong> The system assigns a clear priority level (e.g., High, Medium, Low) and recommends the required type of care (Doctor, Nurse, or Telehealth).</li></ol>`,
+              impact: `<h4 class="font-bold text-lg mb-2">Transforming Patient Experience</h4><p class="mb-4">This initial step dramatically improves hospital flow and patient outcomes from the moment they arrive.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Reduces Wait Times:</strong> By automating prioritization, we eliminate manual bottlenecks and reduce wait times by an estimated 20-30%.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Improves Clinical Outcomes:</strong> Critical cases like chest pain are flagged instantly, preventing delays and ensuring life-saving care is delivered faster.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Standardizes Care:</strong> Triage is based on consistent, approved rules, ensuring every patient is assessed fairly and accurately, regardless of which staff member is on duty.</span></li></ul>`
+            }
+          },
+          allocation: {
+            title: "Intelligent Resource Allocation",
+            tabs: [{ id: 'how', name: 'How It Works' }, { id: 'impact', name: 'Benefits & Impact' }],
+            panes: {
+              how: `<h4 class="font-bold text-lg mb-2">Getting the Right Patient to the Right Doctor</h4><p class="mb-4">Our system acts as an automated, intelligent dispatcher, ensuring that hospital staff are utilized to their full potential.</p><ol class="list-decimal list-inside space-y-3 text-slate-600"><li><strong>System Monitoring:</strong> The platform continuously checks the queue for newly triaged, unassigned patients.</li><li><strong>Worker Availability Check:</strong> It scans the real-time schedules and status of all 40 doctors and 3 nurses to see who is available and what their current workload is.</li><li><strong>Smart Assignment:</strong> Based on the patient's required care type (e.g., 'Doctor'), the system assigns them to the least busy, available doctor, preventing staff burnout.</li><li><strong>Real-Time Notifications:</strong> The assigned doctor and the patient both receive an instant notification with the assignment details (e.g., "See Dr. Kamau in Room 3").</li></ol>`,
+              impact: `<h4 class="font-bold text-lg mb-2">Optimizing Hospital Workflow</h4><p class="mb-4">This feature directly addresses understaffing by making the existing workforce more efficient and effective.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Prevents Staff Burnout:</strong> By automatically load-balancing cases, the system ensures no single doctor or nurse is overwhelmed, improving staff morale and retention.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Maximizes Efficiency:</strong> Ensures that doctors are focused on high-urgency cases while nurses handle appropriate medium-urgency tasks, making the best use of everyone's time and skills.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Reduces Revenue Loss:</strong> By seeing patients more efficiently and reducing the number who leave due to long waits, the system helps capture previously lost revenue (~$200/day).</span></li></ul>`
+            }
+          },
+          dashboard: {
+            title: "Unified Command Center",
+            tabs: [{ id: 'how', name: 'Key Features' }, { id: 'impact', name: 'Benefits & Impact' }],
+            panes: {
+                how: `<h4 class="font-bold text-lg mb-2">A Bird's-Eye View of Hospital Operations</h4><p class="mb-4">The Command Center is a live, intuitive dashboard designed for supervisors and administrators to monitor the hospital's pulse in real time.</p><ul class="list-disc list-inside space-y-3 text-slate-600"><li><strong>Live Patient Queue:</strong> Visualize the number of patients at each stage of their journey—from waiting and triage to assignment and treatment.</li><li><strong>Staff Workload Heatmap:</strong> Instantly see which staff members are available, who is nearing their capacity, and who is currently overloaded. This is color-coded for quick assessment.</li><li><strong>Critical Alerts:</strong> High-urgency cases automatically trigger alerts on the dashboard, allowing for immediate intervention or resource re-allocation if necessary.</li></ul>`,
+                impact: `<h4 class="font-bold text-lg mb-2">From Reactive to Proactive Management</h4><p class="mb-4">This dashboard empowers leadership with the data needed for immediate, informed decision-making.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Improved Situational Awareness:</strong> Eliminate guesswork. Supervisors know exactly where the bottlenecks are and can act decisively.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Enhanced Patient Safety:</strong> By visually tracking high-urgency patients and staff availability, managers can prevent cases from falling through the cracks.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Data-Backed Oversight:</strong> Provides a transparent view of operations, enabling better support for front-line staff and justification for resource requests.</span></li></ul>`
+            }
+          },
+          analytics: {
+            title: "Actionable Analytics & Reporting",
+            tabs: [{ id: 'how', name: 'How It Works' }, { id: 'impact', name: 'Benefits & Impact' }],
+            panes: {
+                how: `<h4 class="font-bold text-lg mb-2">Turning Daily Data into Long-Term Strategy</h4><p class="mb-4">TriageAI includes a powerful, automated reporting engine to help administrators understand and optimize hospital performance over time.</p><ol class="list-decimal list-inside space-y-3 text-slate-600"><li><strong>Automated Data Collection:</strong> Every triage and assignment action is logged securely throughout the day.</li><li><strong>Scheduled Report Generation:</strong> Every night at midnight, a serverless function automatically runs to process the day's data.</li><li><strong>Comprehensive Analysis:</strong> The system aggregates key metrics like peak patient hours, most common symptoms, average wait times by urgency, and staff performance.</li><li><strong>Secure Delivery:</strong> A concise CSV report is generated and stored securely in a dedicated S3 bucket, ready for download and analysis by authorized administrators.</li></ol>`,
+                impact: `<h4 class="font-bold text-lg mb-2">Driving Continuous Improvement</h4><p class="mb-4">This feature provides the strategic insights needed to make long-term improvements to hospital operations.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Optimize Staffing Schedules:</strong> Identify peak hours and days to schedule staff more effectively, ensuring coverage when it's needed most.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Inform Resource Planning:</strong> Use data on common ailments and patient volume to justify budget requests for specific equipment, supplies, or additional staff.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Track Performance & Growth:</strong> Monitor key performance indicators (KPIs) over weeks and months to measure the impact of operational changes and demonstrate improvement.</span></li></ul>`
+            }
+          }
+        };
+
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - (diameter / 2)}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - (diameter / 2)}px`;
+            circle.classList.add("ripple");
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) ripple.remove();
+            button.appendChild(circle);
+        };
+
         async function analyzeSymptoms(symptoms) {
-          console.log("Analyzing symptoms with mock Lambda:", symptoms);
           return new Promise(resolve => {
             setTimeout(() => {
-              const weights = { 'headache': 4, 'chest pain': 10, 'abdominal pain': 7, 'arm pain': 3, 'leg pain': 3 };
-              const score = symptoms.reduce((total, s) => total + (weights[s.toLowerCase()] || 1), 0);
-              resolve({ score: score, urgency: score >= 8 ? 'High' : 'Medium' });
-            }, 1500);
+              const weights = { 'Headache': 4, 'Chest Pain': 10, 'Abdominal Pain': 7, 'Arm Pain': 3, 'Leg Pain': 3 };
+              const score = symptoms.reduce((total, s) => total + (weights[s] || 1), 0);
+              resolve({ score: score, urgency: score >= 10 ? 'High' : (score >= 5 ? 'Medium' : 'Low') });
+            }, 1000);
           });
         }
         
-        function drawQueueChart() {
-            const container = d3.select("#d3-queue-chart");
-            if (!container.node()) return;
-            
-            container.html("");
-            const width = container.node().getBoundingClientRect().width;
-            const height = 300;
-            if (width < 10) return;
-
-            const svg = container.append("svg").attr("width", width).attr("height", height);
-            const stages = ["Waiting", "In-Triage", "Assigned"];
-            const patientData = stages.map(stage => ({ stage, count: Math.floor(Math.random() * (stage === "Waiting" ? 50 : 15)) + 5 }));
-            const xScale = d3.scaleBand().domain(stages).range([30, width - 10]).padding(0.4);
-            const yScale = d3.scaleLinear().domain([0, d3.max(patientData, d => d.count) * 1.2]).range([height - 30, 20]);
-            
-            svg.selectAll(".bar").data(patientData).join( enter => enter.append("rect").attr("y", d => height - 30).attr("height", 0) )
-                .attr("class", "bar").attr("x", d => xScale(d.stage)).attr("width", xScale.bandwidth()).attr("fill", "var(--color-primary)").attr("rx", 5)
-                .transition().duration(750).ease(d3.easeBounceOut)
-                .attr("y", d => yScale(d.count)).attr("height", d => height - 30 - yScale(d.count));
-
-            svg.selectAll(".label").data(patientData).join("text").attr("class", "label").attr("x", d => xScale(d.stage) + xScale.bandwidth() / 2).attr("y", d => yScale(d.count) - 5).attr("text-anchor", "middle").attr("fill", "var(--color-text)").style("font-weight", "600").text(d => d.count);
-            svg.append("g").attr("transform", `translate(0, ${height - 30})`).call(d3.axisBottom(xScale));
-            svg.append("g").attr("transform", `translate(30, 0)`).call(d3.axisLeft(yScale).ticks(5));
+        function initApp() {
+            initLoader();
+            initMagneticButtons();
+            initScrollAnimations();
+            initInteractiveElements();
+            initModal();
         }
 
-        // Main application logic, wrapped to ensure libraries are loaded.
-        const initApp = () => {
-            document.body.style.opacity = 1; // Fade in the body
+        function initLoader() {
+            const preloader = document.getElementById('preloader');
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    preloader.classList.add('fade-out');
+                    document.documentElement.classList.add('page-loaded');
+                    ScrollTrigger.refresh(true);
+                }, 500);
+                preloader.addEventListener('transitionend', () => preloader.style.display = 'none');
+            });
+        }
 
-            gsap.registerPlugin(ScrollTrigger);
+        function initMagneticButtons() {
+            const magneticBtn = document.querySelector('#magnetic-btn');
+            if (!magneticBtn) return;
+            const heroSection = document.querySelector('#home');
+            heroSection.addEventListener('mousemove', (e) => {
+                const { clientX, clientY } = e;
+                const { left, top, width, height } = magneticBtn.getBoundingClientRect();
+                const x = clientX - (left + width / 2);
+                const y = clientY - (top + height / 2);
+                gsap.to(magneticBtn, { x: x * 0.2, y: y * 0.3, duration: 0.8, ease: 'power3.out' });
+            });
+            heroSection.addEventListener('mouseleave', () => {
+                gsap.to(magneticBtn, { x: 0, y: 0, duration: 0.8, ease: 'elastic.out(1, 0.3)' });
+            });
+        }
 
-            // --- HERO AND ICONS ANIMATION ---
-            gsap.from(".hero-title, .hero-subtitle", { duration: 1.2, y: 100, opacity: 0, ease: "power4.out", stagger: 0.2, delay: 0.5 });
-            gsap.from(".hero-title + .hero-title", { delay: 0.7 });
-            gsap.from(".hero-subtitle + div", { duration: 1, y: 50, opacity: 0, ease: "power3.out", delay: 1 });
+        function initScrollAnimations() {
+            gsap.from(".hero-title, .hero-subtitle, #magnetic-btn", { duration: 1, y: 80, opacity: 0, ease: "power3.out", stagger: 0.15, delay: 0.2 });
+            gsap.to("#hero-bg", { scrollTrigger: { trigger: "#home", start: "top top", end: "bottom top", scrub: true }, scale: 1.2, y: 100, ease: "none" });
             gsap.utils.toArray('.floating-icon').forEach(icon => {
-                gsap.to(icon, { y: gsap.utils.random(-20, 20, 5), x: gsap.utils.random(-20, 20, 5), duration: gsap.utils.random(3, 5, 1), repeat: -1, yoyo: true, ease: "sine.inOut" });
+                gsap.to(icon, { y: gsap.utils.random(-20, 20, 5), x: gsap.utils.random(-20, 20, 5), duration: gsap.utils.random(4, 6, 1), repeat: -1, yoyo: true, ease: "sine.inOut" });
             });
-
-            // --- UNIFIED SECTION ANIMATION ---
-            gsap.utils.toArray('main > section:not(#home)').forEach(section => {
-                gsap.from(section, {
-                    scrollTrigger: {
-                        trigger: section,
-                        start: "top 85%",
-                        toggleActions: "play none none none",
-                        onEnter: () => {
-                            if (section.id === 'professionals' && !section.chartInitialized) {
-                                drawQueueChart();
-                                setInterval(drawQueueChart, 5000);
-                                section.chartInitialized = true;
-                            }
-                        }
-                    },
-                    opacity: 0,
-                    y: 50,
-                    duration: 1,
-                    ease: "power3.out"
-                });
-            });
-
-            // --- COUNTER ANIMATION ---
-            const stats = { patients: 0, wait: 0, staff: 0 };
-            gsap.to(stats, {
+            
+            const statsData = { patients: 25000, beds: 112, staff: 133 };
+            const animatedStats = { patients: 0, beds: 0, staff: 0 };
+            gsap.to(animatedStats, {
                 scrollTrigger: { trigger: "#stat-patients", start: "top 85%" },
-                duration: 2,
-                patients: 27000,
-                wait: 48,
-                staff: 43,
+                duration: 2.5, patients: statsData.patients, beds: statsData.beds, staff: statsData.staff,
                 ease: "power2.out",
                 onUpdate: () => {
-                    document.getElementById('stat-patients').textContent = Math.round(stats.patients).toLocaleString();
-                    document.getElementById('stat-wait-time').textContent = Math.round(stats.wait);
-                    document.getElementById('stat-staff').textContent = Math.round(stats.staff);
+                    document.getElementById('stat-patients').textContent = Math.round(animatedStats.patients).toLocaleString();
+                    document.getElementById('stat-beds').textContent = Math.round(animatedStats.beds).toLocaleString();
+                    document.getElementById('stat-staff').textContent = Math.round(animatedStats.staff).toLocaleString();
                 }
             });
 
-            // --- TRIAGE FORM & INTERACTIVITY LOGIC ---
-            const triageForm = document.getElementById('triage-form'), symptomInput = document.getElementById('symptom-input'), tagsContainer = document.getElementById('symptom-tags'), resultContainer = document.getElementById('triage-result'), voiceBtn = document.getElementById('voice-btn');
+            const researchTl = gsap.timeline({ scrollTrigger: { trigger: "#research", start: "top 70%", toggleActions: "play none none none" }});
+            researchTl.from(["#research-title", "#research-subtitle"], { duration: 0.8, opacity: 0, y: 40, ease: 'power3.out', stagger: 0.2 })
+              .from("#research-component", { duration: 0.8, opacity: 0, y: 50, ease: 'power3.out' }, "-=0.5");
+
+            gsap.utils.toArray('.service-card').forEach(card => {
+                gsap.from(card, { scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none none" }, opacity: 0, y: 50, scale: 0.95, duration: 0.6, ease: 'power2.out' });
+                card.addEventListener('mousemove', (e) => {
+                    const { left, top, width, height } = card.getBoundingClientRect();
+                    const x = (e.clientX - left - width / 2) / 15; const y = (e.clientY - top - height / 2) / 15;
+                    gsap.to(card, { rotationY: x, rotationX: -y, transformPerspective: 500, duration: 0.5, ease: 'power1.out' });
+                });
+                card.addEventListener('mouseleave', () => { gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.5, ease: 'power1.out' }); });
+            });
+            
+            gsap.to("#triage-left-col", { y: -50, ease: "none", scrollTrigger: { trigger: "#triage", start: "top bottom", end: "bottom top", scrub: true } });
+            gsap.to("#body-map-container", { y: 50, ease: "none", scrollTrigger: { trigger: "#triage", start: "top bottom", end: "bottom top", scrub: true } });
+
+            const professionalsTl = gsap.timeline({ scrollTrigger: { trigger: "#professionals", start: "top 70%", toggleActions: "play none none none" }, onComplete: () => { setInterval(drawQueueChart, 5000); }});
+            professionalsTl.call(drawQueueChart).from("#staff-heatmap .staff-status-item", { duration: 0.5, opacity: 0, x: -30, stagger: 0.1, ease: "power2.out" }, "-=0.5");
+        }
+
+        function drawQueueChart() {
+            const container = d3.select("#d3-queue-chart");
+            if (!container.node()) return;
+            container.html("");
+            const width = container.node().getBoundingClientRect().width;
+            const height = 350;
+            if (width < 10) return;
+
+            const svg = container.append("svg").attr("width", width).attr("height", height);
+            const stages = ["Waiting", "In-Triage", "Assigned", "Urgent"];
+            const patientData = stages.map(stage => ({ 
+                stage, 
+                count: Math.floor(Math.random() * (stage === "Waiting" ? 50 : 15)) + 5,
+                color: stage === 'Urgent' ? 'var(--color-emergency)' : 'var(--color-primary)'
+            }));
+
+            const margin = { top: 40, right: 20, bottom: 40, left: 40 };
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const xScale = d3.scaleBand().domain(stages).range([0, innerWidth]).padding(0.4);
+            const yScale = d3.scaleLinear().domain([0, 60]).range([innerHeight, 0]);
+            
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            const xAxis = g.append("g").attr("transform", `translate(0, ${innerHeight})`).call(d3.axisBottom(xScale));
+            const yAxis = g.append("g").call(d3.axisLeft(yScale).ticks(6));
+
+            xAxis.attr("opacity", 0).transition().duration(500).attr("opacity", 1);
+            yAxis.attr("opacity", 0).transition().duration(500).attr("opacity", 1);
+
+            g.selectAll(".bar").data(patientData).enter().append("rect")
+                .attr("x", d => xScale(d.stage)).attr("y", innerHeight)
+                .attr("width", xScale.bandwidth()).attr("height", 0)
+                .attr("fill", d => d.color).attr("rx", 5)
+                .transition().duration(750).ease(d3.easeBounceOut).delay((d, i) => i * 100)
+                .attr("y", d => yScale(d.count)).attr("height", d => innerHeight - yScale(d.count));
+
+            g.selectAll(".label").data(patientData).enter().append("text")
+                .attr("x", d => xScale(d.stage) + xScale.bandwidth() / 2).attr("y", d => yScale(d.count) - 10)
+                .attr("text-anchor", "middle").attr("fill", "var(--color-text)").style("font-weight", "600")
+                .text(d => d.count).attr("opacity", 0)
+                .transition().duration(500).delay((d, i) => 200 + i * 100).attr("opacity", 1);
+        }
+
+        function initInteractiveElements() {
+            initResearchTabs();
+            initTriageForm();
+            document.querySelectorAll('.btn').forEach(button => button.addEventListener('click', createRipple));
+        }
+        
+        function initResearchTabs() {
+            const tabs = document.querySelectorAll('.research-tab');
+            const panes = document.querySelectorAll('.research-content-pane');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetPaneId = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    panes.forEach(pane => {
+                        const isTarget = pane.dataset.content === targetPaneId;
+                        if (pane.classList.contains('active') && !isTarget) {
+                            gsap.to(pane, {autoAlpha: 0, duration: 0.2, ease: 'power2.in', onComplete: () => pane.classList.remove('active')});
+                        } else if (isTarget && !pane.classList.contains('active')) {
+                            pane.classList.add('active');
+                            gsap.fromTo(pane, {autoAlpha: 0, y: 20}, {autoAlpha: 1, y: 0, duration: 0.4, ease: 'power2.out'});
+                        }
+                    });
+                });
+            });
+            panes.forEach((pane, index) => { if(index > 0) gsap.set(pane, {autoAlpha: 0}); });
+        }
+
+        function initTriageForm() {
+            const triageForm = document.getElementById('triage-form'),
+                  symptomInput = document.getElementById('symptom-input'),
+                  tagsContainer = document.getElementById('symptom-tags'),
+                  resultContainer = document.getElementById('triage-result'),
+                  voiceBtn = document.getElementById('voice-btn');
             let selectedSymptoms = [];
 
             function addSymptom(symptom) {
-                symptom = symptom.trim().charAt(0).toUpperCase() + symptom.trim().slice(1);
-                if (symptom && !selectedSymptoms.includes(symptom)) { selectedSymptoms.push(symptom); renderTags(); }
+                symptom = symptom.trim().charAt(0).toUpperCase() + symptom.trim().slice(1).toLowerCase();
+                if (symptom && !selectedSymptoms.includes(symptom)) {
+                    selectedSymptoms.push(symptom);
+                    renderTags();
+                }
                 symptomInput.value = '';
             }
             
@@ -285,15 +580,23 @@
                 selectedSymptoms.forEach(symptom => {
                     const tag = document.createElement('div');
                     tag.className = 'tag'; tag.textContent = symptom;
+                    gsap.from(tag, { duration: 0.3, opacity: 0, scale: 0.8, ease: 'back.out(1.7)' });
+                    
                     const removeBtn = document.createElement('span');
                     removeBtn.className = 'tag-remove'; removeBtn.innerHTML = '×';
-                    removeBtn.onclick = () => { selectedSymptoms = selectedSymptoms.filter(s => s !== symptom); renderTags(); };
+                    removeBtn.onclick = () => {
+                        gsap.to(tag, { duration: 0.3, opacity: 0, scale: 0.8, ease: 'power2.in', onComplete: () => {
+                            selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+                            renderTags();
+                        }});
+                    };
                     tag.appendChild(removeBtn);
                     tagsContainer.appendChild(tag);
                 });
             }
 
             symptomInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addSymptom(symptomInput.value); } });
+            
             triageForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const submitButton = e.target.querySelector('button[type="submit"]');
@@ -301,11 +604,12 @@
                 submitButton.innerHTML = `<div class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>`;
                 try {
                     const result = await analyzeSymptoms(selectedSymptoms);
-                    resultContainer.classList.remove('hidden');
-                    gsap.from(resultContainer, { opacity: 0, y: 20, duration: 0.5 });
-                    resultContainer.innerHTML = `<h4 class="font-bold text-lg mb-2">Triage Analysis Complete</h4><p><strong class="text-slate-900">Urgency Score:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.score}</span></p><p><strong class="text-slate-900">Assigned Urgency:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.urgency}</span></p><p><strong class="text-slate-900">Recommended Staff:</strong> <span class="font-semibold text-[var(--color-primary)]">${result.urgency === 'High' ? 'Doctor' : 'Nurse'}</span></p><p class="text-sm text-slate-500 mt-4">A notification has been sent. Please wait to be called.</p>`;
+                    resultContainer.style.opacity = 1;
+                    resultContainer.style.transform = 'translateY(0)';
+                    resultContainer.innerHTML = `<h4 class="font-bold text-lg mb-2">Triage Analysis Complete</h4><p><strong class="text-slate-900">Urgency Score:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.score}</span></p><p><strong class="text-slate-900">Assigned Urgency:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.urgency}</span></p><p><strong class="text-slate-900">Recommended Staff:</strong> <span class="font-semibold text-[var(--color-primary)]">${result.urgency === 'High' ? 'Doctor' : (result.urgency === 'Medium' ? 'Nurse' : 'Telehealth')}</span></p><p class="text-sm text-slate-500 mt-4">A notification has been sent. Please wait to be called.</p>`;
+                    gsap.from(resultContainer.children, { opacity: 0, y: 10, stagger: 0.1, duration: 0.5 });
                 } catch (error) {
-                    resultContainer.classList.remove('hidden');
+                    resultContainer.style.opacity = 1;
                     resultContainer.innerHTML = `<p class="text-red-500">Error: Could not analyze symptoms. Please try again.</p>`;
                 } finally {
                     submitButton.disabled = false;
@@ -318,22 +622,104 @@
                 const recognition = new SpeechRecognition();
                 recognition.continuous = false; recognition.lang = 'en-US';
                 voiceBtn.addEventListener('click', () => { recognition.start(); voiceBtn.classList.add('voice-active'); });
-                recognition.onresult = (event) => { addSymptom(event.results[0][0].transcript); };
-                recognition.onend = () => { voiceBtn.classList.remove('voice-active'); };
+                recognition.onresult = (event) => addSymptom(event.results[0][0].transcript);
+                recognition.onend = () => voiceBtn.classList.remove('voice-active');
             } else { voiceBtn.style.display = 'none'; }
 
             document.querySelectorAll('#body-map path').forEach(part => {
                 part.addEventListener('click', () => {
                     const symptom = part.dataset.symptom;
                     addSymptom(symptom);
-                    gsap.fromTo(part, { scale: 1.2, fill: '#60a5fa' }, { scale: 1, duration: 0.3, ease: 'back.out(1.7)', fill: '#dbeafe' });
+                    gsap.to(part, { fill: 'var(--color-accent)', duration: 0.2, ease: 'power1.inOut', yoyo: true, repeat: 1 });
                 });
             });
-        };
+        }
         
-        // --- KICK EVERYTHING OFF ---
-        onReady(initApp);
+        function initModal() {
+            const modal = document.getElementById('service-modal');
+            const modalPanel = document.getElementById('modal-panel');
+            const modalTitle = document.getElementById('modal-title');
+            const modalTabsContainer = document.getElementById('modal-tabs');
+            const modalPanesContainer = document.getElementById('modal-panes');
+            const closeBtn = document.getElementById('modal-close-btn');
 
+            // Ensure modal is hidden by default
+            modal.classList.remove('is-open');
+            document.body.classList.remove('modal-open');
+
+            // Prevent double-clicks and race conditions
+            let isModalAnimating = false;
+
+            document.querySelectorAll('.read-more-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    if (isModalAnimating || modal.classList.contains('is-open')) return;
+                    isModalAnimating = true;
+
+                    const serviceId = e.currentTarget.dataset.service;
+                    const data = modalData[serviceId];
+                    if (!data) { isModalAnimating = false; return; }
+
+                    modalTitle.textContent = data.title;
+                    modalTabsContainer.innerHTML = data.tabs.map((tab, i) => `<button class="modal-tab p-3 text-sm font-semibold rounded-md text-left w-full ${i === 0 ? 'active' : ''}" data-tab="${tab.id}">${tab.name}</button>`).join('');
+                    modalPanesContainer.innerHTML = Object.entries(data.panes).map(([k, v], i) => `<div class="modal-pane ${i === 0 ? 'active' : ''}" data-pane="${k}">${v}</div>`).join('');
+
+                    document.body.classList.add('modal-open');
+                    modal.classList.add('is-open');
+                    gsap.fromTo(modalPanel, { y: 50, autoAlpha: 0 }, {
+                        y: 0, autoAlpha: 1, duration: 0.35, ease: 'power3.out',
+                        onComplete: () => {
+                            isModalAnimating = false;
+                        }
+                    });
+                    initModalTabs();
+                });
+            });
+
+            const closeModal = () => {
+                if (isModalAnimating || !modal.classList.contains('is-open')) return;
+                isModalAnimating = true;
+                gsap.to(modalPanel, {
+                    y: 50, autoAlpha: 0, duration: 0.25, ease: 'power3.in',
+                    onComplete: () => {
+                        modal.classList.remove('is-open');
+                        document.body.classList.remove('modal-open');
+                        isModalAnimating = false;
+                    }
+                });
+            };
+
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            // Keyboard accessibility: ESC to close
+            document.addEventListener('keydown', (e) => {
+                if (modal.classList.contains('is-open') && (e.key === "Escape" || e.key === "Esc")) {
+                    closeModal();
+                }
+            });
+        }
+
+        function initModalTabs() {
+            const tabs = document.querySelectorAll('#modal-tabs .modal-tab');
+            const panes = document.querySelectorAll('#modal-panes .modal-pane');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetPaneId = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    panes.forEach(pane => {
+                        const isTarget = pane.dataset.pane === targetPaneId;
+                        if(pane.classList.contains('active') && !isTarget) gsap.to(pane, {autoAlpha: 0, y: 15, duration: 0.2, ease: 'power3.in', onComplete: () => pane.classList.remove('active') });
+                        else if(isTarget && !pane.classList.contains('active')) {
+                            pane.classList.add('active');
+                            gsap.fromTo(pane, {autoAlpha: 0, y: 15}, {autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out', delay: 0.1});
+                        }
+                    });
+                });
+            });
+        }
+
+        onReady(initApp);
     })();
   </script>
 </body>
