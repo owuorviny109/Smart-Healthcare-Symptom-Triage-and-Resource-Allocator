@@ -65,6 +65,32 @@
     .voice-active { animation: pulse-voice 2s infinite; }
     
     /* --- Research Section & Modal Styles --- */
+    #research {
+        position: relative;
+        /* Remove background-image, background-size, etc. from here */
+    }
+    #research-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        pointer-events: none;
+        user-select: none;
+    }
+    #research::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255,255,255,0.7);
+        z-index: 1;
+    }
+    #research > .max-w-6xl,
+    #research > div {
+        position: relative;
+        z-index: 2;
+    }
     .research-tab { transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s; }
     .research-tab.active { background-color: white; color: var(--color-primary); border-color: var(--color-primary); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); }
     .research-content-pane { display: none; }
@@ -139,7 +165,8 @@
         </div>
     </section>
     
-    <section id="research" class="py-24" style="background: linear-gradient(180deg, var(--color-secondary) 0%, #eef5ff 100%);">
+    <section id="research" class="py-24">
+      <img id="research-bg" src="https://images.pexels.com/photos/4483341/pexels-photo-4483341.jpeg?auto=compress&w=1500&q=80" alt="Medical Equipment" />
       <div class="max-w-6xl mx-auto px-6">
         <div class="text-center mb-16">
           <h2 id="research-title" class="text-4xl font-bold text-slate-900">Grounded in Research: Why TriageAI is Necessary</h2>
@@ -354,7 +381,7 @@
             tabs: [{ id: 'how', name: 'How It Works' }, { id: 'impact', name: 'Benefits & Impact' }],
             panes: {
               how: `<h4 class="font-bold text-lg mb-2">Streamlined Patient Intake</h4><p class="mb-4">Our triage engine simplifies and accelerates the first point of contact for every patient, ensuring immediate attention and accurate prioritization.</p><ol class="list-decimal list-inside space-y-3 text-slate-600"><li><strong>Symptom Submission:</strong> A patient uses a kiosk to quickly enter their symptoms through an intuitive interface.</li><li><strong>Instant Analysis:</strong> Our serverless AI engine, aligned with Kenya MOH guidelines, analyzes the symptoms in milliseconds to calculate an urgency score.</li><li><strong>Clear Prioritization:</strong> The system assigns a clear priority level (e.g., High, Medium, Low) and recommends the required type of care (Doctor, Nurse, or Telehealth).</li></ol>`,
-              impact: `<h4 class="font-bold text-lg mb-2">Transforming Patient Experience</h4><p class="mb-4">This initial step dramatically improves hospital flow and patient outcomes from the moment they arrive.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Reduces Wait Times:</strong> By automating prioritization, we eliminate manual bottlenecks and reduce wait times by an estimated 20-30%.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Improves Clinical Outcomes:</strong> Critical cases like chest pain are flagged instantly, preventing delays and ensuring life-saving care is delivered faster.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Standardizes Care:</strong> Triage is based on consistent, approved rules, ensuring every patient is assessed fairly and accurately, regardless of which staff member is on duty.</span></li></ul>`
+              impact: `<h4 class="font-bold text-lg mb-2">Transforming Patient Experience</h4><p class="mb-4">This initial step dramatically improves hospital flow and patient outcomes from the moment they arrive.</p><ul class="space-y-3 text-slate-600"><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Reduces Wait Times:</strong> By automating prioritization, we eliminate manual bottlenecks and reduce wait times by an estimated 20-30%.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Improves Clinical Outcomes:</strong> Critical cases like chest pain are flagged instantly, preventing delays and ensuring life-saving care is delivered faster.</span></li><li class="flex items-start"><svg class="h-5 w-5 text-green-500 shrink-0 mt-1 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span><strong>Standardizes Care:</strong> Triage is based on consistent, approved rules, ensuring every patient is assessed fairly and accurately, regardless of which staff member is on duty.</span></li></ul>`
             }
           },
           allocation: {
@@ -630,7 +657,7 @@
                 part.addEventListener('click', () => {
                     const symptom = part.dataset.symptom;
                     addSymptom(symptom);
-                    gsap.to(part, { fill: 'var(--color-accent)', duration: 0.2, ease: 'power1.inOut', yoyo: true, repeat: 1 });
+                    gsap.to(part, { fill: 'var(--color-accent)', duration: 0.2, ease: 'power1.inOut', yoyo: true, repeat:  1 });
                 });
             });
         }
