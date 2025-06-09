@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AuraSecure Staff Authentication</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Amazon Cognito SDK -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/6.3.1/amazon-cognito-identity.min.js"></script>
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .animated-gradient {
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #334155, #475569);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .animate-fadeInUp {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+    
+    .form-input:focus {
+      --tw-ring-color: #3b82f6; /* blue-500 */
+    }
+
+    .strength-bar {
+        transition: all 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="animated-gradient flex items-center justify-center min-h-screen p-4 text-gray-300">
+
+  <div id="auth-container" class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 shadow-2xl shadow-slate-900/50 rounded-xl max-w-md w-full p-8 space-y-6 animate-fadeInUp">
+    
+    <!-- Header -->
+    <div class="text-center space-y-2">
+       <svg class="mx-auto h-12 w-auto text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
+       </svg>
+      <h2 id="form-title" class="text-3xl font-bold text-white transition-all duration-300">Staff Sign In</h2>
+      <p id="form-subtitle" class="text-slate-400">Secure access to internal systems</p>
+    </div>
+
+    <!-- Form -->
+    <form id="auth-form" class="space-y-4 transition-opacity duration-300" novalidate>
+      <div class="relative">
+         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+             <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.095a1.23 1.23 0 00.41-1.412A9.99 9.99 0 0010 12.75a9.99 9.99 0 00-6.535 1.743z" /></svg>
+         </div>
+         <input type="text" id="username" name="username" placeholder="Username" required autocomplete="username" class="form-input w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:border-blue-500 transition-all duration-300" />
+      </div>
+
+      <div id="email-field" class="relative transition-all duration-500 max-h-0 opacity-0 overflow-hidden">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" /><path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" /></svg>
+        </div>
+        <input type="email" id="email" name="email" placeholder="Email Address" autocomplete="email" class="form-input w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:border-blue-500 transition-all duration-300" />
+      </div>
+
+      <div class="relative">
+         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg>
+         </div>
+        <input type="password" id="password" name="password" placeholder="Password" required autocomplete="current-password" class="form-input w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:border-blue-500 transition-all duration-300" />
+      </div>
+
+      <!-- Password Strength Meter -->
+      <div id="password-strength-container" class="space-y-2 transition-all duration-500 max-h-0 opacity-0 overflow-hidden" aria-live="polite">
+        <div class="flex w-full h-1.5 bg-slate-700 rounded-full overflow-hidden" aria-hidden="true">
+            <div id="strength-bar-1" class="strength-bar w-1/4"></div>
+            <div id="strength-bar-2" class="strength-bar w-1/4"></div>
+            <div id="strength-bar-3" class="strength-bar w-1/4"></div>
+            <div id="strength-bar-4" class="strength-bar w-1/4"></div>
+        </div>
+        <p id="password-strength-text" class="text-xs text-slate-400 text-right"></p>
+      </div>
+
+      <button type="submit" id="submit-btn" class="w-full flex justify-center items-center py-3 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 focus:ring-blue-500 transition-all duration-300" aria-live="polite">
+         <span id="submit-text">Sign In</span>
+         <svg id="spinner" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+         </svg>
+      </button>
+    </form>
+
+    <!-- Toggle Link -->
+    <p class="text-center text-slate-400 text-sm select-none">
+      <button id="toggle-form" type="button" class="underline underline-offset-4 hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors duration-300">
+        Don't have an account? Register now
+      </button>
+    </p>
+
+    <!-- Message Area -->
+    <div id="message" role="alert" aria-live="assertive" class="mt-4 text-center text-sm font-medium"></div>
+  </div>
+
+<script>
+  const authForm = document.getElementById('auth-form');
+  const toggleFormBtn = document.getElementById('toggle-form');
+  const formTitle = document.getElementById('form-title');
+  const formSubtitle = document.getElementById('form-subtitle');
+  const emailField = document.getElementById('email-field');
+  const passwordInput = document.getElementById('password');
+  const passwordStrengthContainer = document.getElementById('password-strength-container');
+  const strengthBars = [
+    document.getElementById('strength-bar-1'),
+    document.getElementById('strength-bar-2'),
+    document.getElementById('strength-bar-3'),
+    document.getElementById('strength-bar-4'),
+  ];
+  const strengthText = document.getElementById('password-strength-text');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitText = document.getElementById('submit-text');
+  const spinner = document.getElementById('spinner');
+  const messageBox = document.getElementById('message');
+
+  let isLoginMode = true;
+
+  // Helper: Show/hide elements with smooth animation
+  function toggleVisibility(element, show) {
+    if (show) {
+      element.style.maxHeight = element.scrollHeight + "px";
+      element.style.opacity = "1";
+      element.style.overflow = "visible";
+    } else {
+      element.style.maxHeight = "0";
+      element.style.opacity = "0";
+      element.style.overflow = "hidden";
+    }
+  }
+
+  // Password strength calculation (basic)
+  function calculatePasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return strength; // 0-4
+  }
+
+  // Update password strength UI
+  function updatePasswordStrength(password) {
+    const strength = calculatePasswordStrength(password);
+    const colors = ['bg-red-600', 'bg-orange-500', 'bg-yellow-400', 'bg-green-500'];
+    const strengthLabels = ['Very Weak', 'Weak', 'Moderate', 'Strong'];
+
+    strengthBars.forEach((bar, index) => {
+      if (index < strength) {
+        bar.className = `strength-bar ${colors[strength - 1]} transition-all duration-300`;
+      } else {
+        bar.className = 'strength-bar bg-slate-700 transition-all duration-300';
+      }
+    });
+
+    if (password.length === 0) {
+      strengthText.textContent = '';
+      toggleVisibility(passwordStrengthContainer, false);
+    } else {
+      strengthText.textContent = strengthLabels[strength - 1] || 'Very Weak';
+      toggleVisibility(passwordStrengthContainer, true);
+    }
+  }
+
+  // Toggle between login and register modes
+  toggleFormBtn.addEventListener('click', () => {
+    isLoginMode = !isLoginMode;
+
+    if (isLoginMode) {
+      formTitle.textContent = 'Staff Sign In';
+      formSubtitle.textContent = 'Secure access to internal systems';
+      submitText.textContent = 'Sign In';
+      toggleFormBtn.textContent = "Don't have an account? Register now";
+      toggleVisibility(emailField, false);
+      toggleVisibility(passwordStrengthContainer, false);
+      messageBox.textContent = '';
+      authForm.reset();
+    } else {
+      formTitle.textContent = 'Staff Registration';
+      formSubtitle.textContent = 'Create your secure staff account';
+      submitText.textContent = 'Register';
+      toggleFormBtn.textContent = "Already have an account? Sign in";
+      toggleVisibility(emailField, true);
+      toggleVisibility(passwordStrengthContainer, true);
+      messageBox.textContent = '';
+      authForm.reset();
+    }
+  });
+
+  passwordInput.addEventListener('input', (e) => {
+    if (!isLoginMode) {
+      updatePasswordStrength(e.target.value);
+    }
+  });
+
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageBox.textContent = '';
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
+
+    const username = authForm.username.value.trim();
+    const password = authForm.password.value;
+    const email = authForm.email.value.trim();
+
+    try {
+      if (isLoginMode) {
+        // Handle login logic here (use Cognito or your auth method)
+        // Example: await auth.signIn(username, password);
+        messageBox.textContent = 'Logging in...';
+        // Simulated delay
+        await new Promise(r => setTimeout(r, 1500));
+        messageBox.textContent = 'Successfully signed in!';
+      } else {
+        if (!email) {
+          throw new Error('Email is required for registration.');
+        }
+        if (calculatePasswordStrength(password) < 3) {
+          throw new Error('Password strength is too weak.');
+        }
+        // Handle registration logic here
+        // Example: await auth.register(username, email, password);
+        messageBox.textContent = 'Registering...';
+        await new Promise(r => setTimeout(r, 2000));
+        messageBox.textContent = 'Registration successful! Please check your email to verify your account.';
+      }
+    } catch (err) {
+      messageBox.textContent = `Error: ${err.message || 'Something went wrong.'}`;
+    } finally {
+      submitBtn.disabled = false;
+      spinner.classList.add('hidden');
+    }
+  });
+
+  // Initial states
+  toggleVisibility(emailField, false);
+  toggleVisibility(passwordStrengthContainer, false);
+
+</script>
+
+</body>
+</html>

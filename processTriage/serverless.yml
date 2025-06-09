@@ -1,4 +1,4 @@
-service: kenya-healthcare-triage
+service:  smarttriage-service
 
 provider:
   name: aws

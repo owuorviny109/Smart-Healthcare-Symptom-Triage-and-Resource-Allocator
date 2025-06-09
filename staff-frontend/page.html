@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TriageAI | World-Class Healthcare Management System</title>
+  
+  <!-- Libraries loaded in Head for reliability -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+  
+  <style>
+    :root {
+        --color-primary: #0d47a1; /* Deep Blue */
+        --color-accent: #FFD700;  /* Gold */
+        --color-secondary: #f8fafc; /* Slate 50 */
+        --color-text: #334155;     /* Slate 700 */
+        --color-emergency: #e53935; /* Vibrant Red */
+    }
+    body { font-family: 'Poppins', sans-serif; background-color: var(--color-secondary); color: var(--color-text); opacity: 0; transition: opacity 0.5s ease-in; }
+    .btn { transition: all 0.2s ease-in-out; }
+    .btn-primary { background-color: var(--color-primary); color: white; }
+    .btn-primary:hover { background-color: #0b3a80; box-shadow: 0 7px 20px -5px rgba(13, 71, 161, 0.4); transform: translateY(-3px); }
+    .btn-accent { background-color: var(--color-accent); color: var(--color-primary); font-weight: 600; }
+    .btn-accent:hover { background-color: #e6c200; box-shadow: 0 7px 20px -5px rgba(255, 215, 0, 0.4); transform: translateY(-3px); }
+    .nav-link { position: relative; transition: color 0.2s; color: #475569; }
+    .nav-link:after { content: ''; position: absolute; width: 0; height: 2px; bottom: -6px; left: 0; background-color: var(--color-primary); transition: width 0.3s; }
+    .nav-link:hover { color: var(--color-primary); }
+    .nav-link:hover:after { width: 100%; }
+    /* REMOVED .animate-section class - JS will handle this now */
+    .tag { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; background-color: #e3f2fd; color: #0d47a1; border-radius: 9999px; font-weight: 500; margin: 0.25rem; animation: fadeInUp 0.3s; }
+    .tag-remove { margin-left: 0.5rem; cursor: pointer; font-weight: bold; }
+    .floating-icon { position: absolute; opacity: 0.1; pointer-events: none; }
+    #body-map svg path { cursor: pointer; fill: #dbeafe; stroke: #93c5fd; transition: fill 0.2s ease-in-out; }
+    #body-map svg path:hover { fill: #93c5fd; transform: scale(1.05); }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-voice { 0%, 100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); } }
+    .voice-active { animation: pulse-voice 2s infinite; }
+  </style>
+</head>
+<body class="text-slate-700">
+
+  <!-- Header & Navigation -->
+  <header class="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 left-0 w-full z-50">
+    <div class="max-w-screen-xl mx-auto px-6">
+      <div class="flex justify-between items-center py-4">
+        <a href="#home" class="flex items-center space-x-2">
+          <svg class="h-8 w-8 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+          <span class="text-2xl font-bold text-slate-800">TriageAI</span>
+        </a>
+        <nav class="space-x-8 hidden md:flex items-center font-semibold">
+          <a href="#services" class="nav-link">Services</a>
+          <a href="#triage" class="nav-link">Patient Triage</a>
+          <a href="#professionals" class="nav-link">For Professionals</a>
+          <a href="/staff-login.html" class="btn btn-primary px-6 py-2 rounded-full">Staff Portal</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-[90vh] flex items-center justify-center text-white text-center overflow-hidden" style="background-image: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2940&auto=format&fit=crop'); background-size: cover; background-position: center;">
+      <div class="absolute inset-0 bg-[var(--color-primary)] opacity-60"></div>
+      <svg class="floating-icon text-white w-16 h-16" style="top: 15%; left: 10%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      <svg class="floating-icon text-white w-24 h-24" style="top: 20%; right: 15%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      <svg class="floating-icon text-white w-12 h-12" style="bottom: 20%; left: 25%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      <div class="relative max-w-4xl mx-auto px-6">
+        <h1 class="hero-title text-4xl md:text-6xl font-bold leading-tight" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">World-Class Care,</h1>
+        <h1 class="hero-title text-4xl md:text-6xl font-bold leading-tight text-[var(--color-accent)]" style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Intelligently Delivered.</h1>
+        <p class="hero-subtitle mt-6 text-lg text-slate-200 max-w-2xl mx-auto">A revolutionary AI platform, built for the AWS Lambda Hackathon, to solve the triage crisis at Mama Lucy Hospital and beyond.</p>
+        <div class="mt-10 flex flex-wrap justify-center gap-4">
+          <a href="#triage" class="btn btn-accent px-8 py-3 rounded-full font-semibold text-lg">Begin Patient Triage</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-screen-xl mx-auto px-6">
+            <div class="text-center mb-12"><h2 class="text-3xl font-bold text-slate-900">The State of Care at Mama Lucy Hospital</h2><p class="mt-4 text-slate-600">Addressing the critical numbers with a smart, scalable solution.</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div><p class="text-5xl font-bold text-blue-600" id="stat-patients">0</p><p class="mt-2 text-slate-500 font-medium">Patients Per Month</p></div>
+                <div><p class="text-5xl font-bold text-red-500" id="stat-wait-time">0</p><p class="mt-2 text-slate-500 font-medium">Hour Max Wait Time</p></div>
+                <div><p class="text-5xl font-bold text-amber-500" id="stat-staff">0</p><p class="mt-2 text-slate-500 font-medium">Staff Per Shift (Avg)</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-slate-50">
+      <div class="max-w-screen-xl mx-auto px-6">
+        <div class="text-center mb-16"><h2 class="text-4xl font-bold text-slate-900">A Complete Clinical Operations System</h2><p class="mt-4 text-slate-600 max-w-2xl mx-auto">From patient intake to staff management, TriageAI provides an end-to-end solution built on a foundation of data and intelligence.</p></div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-primary)]"><h3 class="text-xl font-semibold mb-2">AI-Powered Triage Engine</h3><p class="text-slate-600">Utilizes AWS Comprehend Medical and custom logic based on MOH protocols to deliver instant, accurate urgency scores.</p></div>
+            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-primary)]"><h3 class="text-xl font-semibold mb-2">Smart Staff Allocation</h3><p class="text-slate-600">Our algorithm analyzes staff roles, availability, and real-time workload to make intelligent patient assignments.</p></div>
+            <div class="bg-white p-8 rounded-xl shadow-lg text-center border-t-4 border-[var(--color-primary)]"><h3 class="text-xl font-semibold mb-2">Real-Time Dashboards</h3><p class="text-slate-600">Live visualizations of patient queues, staff heatmaps, and emergency alerts for unmatched operational awareness.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patient Triage Section with Body Map -->
+    <section id="triage" class="py-24 bg-white">
+        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            <div class="text-left">
+                <h2 class="text-4xl font-bold text-slate-900">Interactive Symptom Analyzer</h2>
+                <p class="mt-4 mb-8 text-slate-600">A faster, more intuitive way to provide care information. Click on the body map, use voice commands, or type your symptoms to begin.</p>
+                <form id="triage-form" class="space-y-6 text-left bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-lg">
+                    <div class="relative flex items-center">
+                      <input type="text" id="symptom-input" class="w-full p-4 border rounded-full" placeholder="Type or use voice/map to add symptoms...">
+                      <button type="button" id="voice-btn" class="absolute right-3 p-2 rounded-full hover:bg-slate-100 transition-colors"><svg class="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg></button>
+                    </div>
+                    <div id="symptom-tags" class="flex flex-wrap gap-2 min-h-[44px] bg-white p-2 rounded-lg border"></div>
+                    <button type="submit" class="w-full btn btn-primary px-4 py-3 rounded-full text-lg font-semibold">Analyze Symptoms</button>
+                </form>
+                <div id="triage-result" class="mt-6 text-left bg-white p-6 rounded-lg shadow-md border hidden"></div>
+            </div>
+            <div id="body-map" class="w-full h-full flex items-center justify-center">
+                <svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+                    <g id="body-parts" transform="translate(10, 10)">
+                        <path id="head" data-symptom="Headache" d="M75 5 a 45 45 0 1 1 0.1 0 z" />
+                        <path id="chest" data-symptom="Chest Pain" d="M50 80 h 90 v 60 h -90 Z" />
+                        <path id="abdomen" data-symptom="Abdominal Pain" d="M55 145 h 80 v 60 h -80 Z" />
+                        <path id="left-arm" data-symptom="Arm Pain" d="M45 85 l -30 70 h 20 l 20 -70 Z" />
+                        <path id="right-arm" data-symptom="Arm Pain" d="M145 85 l 30 70 h -20 l -20 -70 Z" />
+                        <path id="left-leg" data-symptom="Leg Pain" d="M60 210 h 30 v 120 h -30 Z" />
+                        <path id="right-leg" data-symptom="Leg Pain" d="M100 210 h 30 v 120 h -30 Z" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- For Professionals Section with D3.js -->
+    <section id="professionals" class="py-24 bg-slate-50">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-16"><h2 class="text-4xl font-bold text-slate-900">The Professional's Command Center</h2><p class="mt-4 text-slate-600 max-w-2xl mx-auto">Empowering healthcare staff with the data and tools needed for decisive action.</p></div>
+        <div class="bg-white p-8 rounded-xl border border-slate-200 shadow-2xl">
+            <h3 class="font-bold text-2xl mb-4 text-slate-800">Live Patient Queue & Staff Heatmap</h3>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div id="d3-queue-chart" class="md:col-span-2 min-h-[300px] bg-slate-100 rounded-lg p-4 border"></div>
+                <div id="staff-heatmap" class="space-y-4">
+                    <h4 class="font-semibold text-lg">Staff Status</h4>
+                    <div class="p-4 bg-green-100 text-green-800 rounded-lg"><strong>Dr. Kamau:</strong> Available <span class="font-mono">(2/5 Cases)</span></div>
+                    <div class="p-4 bg-amber-100 text-amber-800 rounded-lg"><strong>Dr. Omondi:</strong> Nearing Capacity <span class="font-mono">(4/5 Cases)</span></div>
+                    <div class="p-4 bg-red-100 text-red-800 rounded-lg"><strong>Nurse Achieng:</strong> At Capacity <span class="font-mono">(10/10 Cases)</span></div>
+                    <div class="p-4 bg-slate-200 text-slate-600 rounded-lg"><strong>Dr. Wanjiku:</strong> On Break</div>
+                </div>
+            </div>
+             <div class="mt-8 text-center"><a href="/staff-portal.html" class="btn btn-primary px-8 py-3 rounded-full font-semibold">Launch Full Staff Portal</a></div>
+        </div>
+      </div>
+    </section>
+  
+  </main>
+
+  <footer class="text-center text-sm py-8 bg-[var(--color-primary)] text-slate-300">
+    <p>© 2025 TriageAI. All rights reserved.</p>
+    <p class="mt-1">A demonstration project for the AWS Lambda Hackathon, inspired by the needs of Mama Lucy Kibaki Hospital.</p>
+  </footer>
+
+  <script>
+    // Self-executing function to avoid polluting the global scope
+    (() => {
+        // --- 1. DEFINE ALL YOUR FUNCTIONS FIRST ---
+
+        const onReady = (callback) => {
+            if (document.readyState !== 'loading') callback();
+            else document.addEventListener('DOMContentLoaded', callback);
+        };
+
+        async function analyzeSymptoms(symptoms) {
+          console.log("Analyzing symptoms with mock Lambda:", symptoms);
+          return new Promise(resolve => {
+            setTimeout(() => {
+              const weights = { 'headache': 4, 'chest pain': 10, 'abdominal pain': 7, 'arm pain': 3, 'leg pain': 3 };
+              const score = symptoms.reduce((total, s) => total + (weights[s.toLowerCase()] || 1), 0);
+              resolve({ score: score, urgency: score >= 8 ? 'High' : 'Medium' });
+            }, 1500);
+          });
+        }
+        
+        function drawQueueChart() {
+            const container = d3.select("#d3-queue-chart");
+            if (!container.node()) return;
+            
+            container.html("");
+            const width = container.node().getBoundingClientRect().width;
+            const height = 300;
+            if (width < 10) return;
+
+            const svg = container.append("svg").attr("width", width).attr("height", height);
+            const stages = ["Waiting", "In-Triage", "Assigned"];
+            const patientData = stages.map(stage => ({ stage, count: Math.floor(Math.random() * (stage === "Waiting" ? 50 : 15)) + 5 }));
+            const xScale = d3.scaleBand().domain(stages).range([30, width - 10]).padding(0.4);
+            const yScale = d3.scaleLinear().domain([0, d3.max(patientData, d => d.count) * 1.2]).range([height - 30, 20]);
+            
+            svg.selectAll(".bar").data(patientData).join( enter => enter.append("rect").attr("y", d => height - 30).attr("height", 0) )
+                .attr("class", "bar").attr("x", d => xScale(d.stage)).attr("width", xScale.bandwidth()).attr("fill", "var(--color-primary)").attr("rx", 5)
+                .transition().duration(750).ease(d3.easeBounceOut)
+                .attr("y", d => yScale(d.count)).attr("height", d => height - 30 - yScale(d.count));
+
+            svg.selectAll(".label").data(patientData).join("text").attr("class", "label").attr("x", d => xScale(d.stage) + xScale.bandwidth() / 2).attr("y", d => yScale(d.count) - 5).attr("text-anchor", "middle").attr("fill", "var(--color-text)").style("font-weight", "600").text(d => d.count);
+            svg.append("g").attr("transform", `translate(0, ${height - 30})`).call(d3.axisBottom(xScale));
+            svg.append("g").attr("transform", `translate(30, 0)`).call(d3.axisLeft(yScale).ticks(5));
+        }
+
+        // Main application logic, wrapped to ensure libraries are loaded.
+        const initApp = () => {
+            document.body.style.opacity = 1; // Fade in the body
+
+            gsap.registerPlugin(ScrollTrigger);
+
+            // --- HERO AND ICONS ANIMATION ---
+            gsap.from(".hero-title, .hero-subtitle", { duration: 1.2, y: 100, opacity: 0, ease: "power4.out", stagger: 0.2, delay: 0.5 });
+            gsap.from(".hero-title + .hero-title", { delay: 0.7 });
+            gsap.from(".hero-subtitle + div", { duration: 1, y: 50, opacity: 0, ease: "power3.out", delay: 1 });
+            gsap.utils.toArray('.floating-icon').forEach(icon => {
+                gsap.to(icon, { y: gsap.utils.random(-20, 20, 5), x: gsap.utils.random(-20, 20, 5), duration: gsap.utils.random(3, 5, 1), repeat: -1, yoyo: true, ease: "sine.inOut" });
+            });
+
+            // --- UNIFIED SECTION ANIMATION (THE FIX) ---
+            // This loop handles all sections correctly.
+            gsap.utils.toArray('main > section').forEach(section => {
+                // All sections start invisible and will be faded in by GSAP
+                gsap.from(section, {
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 85%",
+                        toggleActions: "play none none none",
+                        // Special callback ONLY for the #professionals section
+                        onEnter: () => {
+                            if (section.id === 'professionals') {
+                                // This check makes sure we only initialize the chart once.
+                                if (!section.chartInitialized) {
+                                    drawQueueChart();
+                                    setInterval(drawQueueChart, 5000);
+                                    section.chartInitialized = true;
+                                }
+                            }
+                        }
+                    },
+                    opacity: 0,
+                    y: 50,
+                    duration: 1,
+                    ease: "power3.out"
+                });
+            });
+
+            // --- COUNTER ANIMATION ---
+            const stats = { patients: 0, wait: 0, staff: 0 };
+            gsap.to(stats, {
+                scrollTrigger: { trigger: "#stat-patients", start: "top 85%" },
+                duration: 2,
+                patients: 27000,
+                wait: 48,
+                staff: 43,
+                ease: "power2.out",
+                onUpdate: () => {
+                    document.getElementById('stat-patients').textContent = Math.round(stats.patients).toLocaleString();
+                    document.getElementById('stat-wait-time').textContent = Math.round(stats.wait);
+                    document.getElementById('stat-staff').textContent = Math.round(stats.staff);
+                }
+            });
+
+            // --- TRIAGE FORM & INTERACTIVITY LOGIC (No changes needed here) ---
+            const triageForm = document.getElementById('triage-form'), symptomInput = document.getElementById('symptom-input'), tagsContainer = document.getElementById('symptom-tags'), resultContainer = document.getElementById('triage-result'), voiceBtn = document.getElementById('voice-btn');
+            let selectedSymptoms = [];
+
+            function addSymptom(symptom) {
+                symptom = symptom.trim().charAt(0).toUpperCase() + symptom.trim().slice(1);
+                if (symptom && !selectedSymptoms.includes(symptom)) { selectedSymptoms.push(symptom); renderTags(); }
+                symptomInput.value = '';
+            }
+            
+            function renderTags() {
+                tagsContainer.innerHTML = '';
+                selectedSymptoms.forEach(symptom => {
+                    const tag = document.createElement('div');
+                    tag.className = 'tag'; tag.textContent = symptom;
+                    const removeBtn = document.createElement('span');
+                    removeBtn.className = 'tag-remove'; removeBtn.innerHTML = '×';
+                    removeBtn.onclick = () => { selectedSymptoms = selectedSymptoms.filter(s => s !== symptom); renderTags(); };
+                    tag.appendChild(removeBtn);
+                    tagsContainer.appendChild(tag);
+                });
+            }
+
+            symptomInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addSymptom(symptomInput.value); } });
+            triageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitButton = e.target.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<div class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>`;
+                try {
+                    const result = await analyzeSymptoms(selectedSymptoms);
+                    resultContainer.classList.remove('hidden');
+                    gsap.from(resultContainer, { opacity: 0, y: 20, duration: 0.5 });
+                    resultContainer.innerHTML = `<h4 class="font-bold text-lg mb-2">Triage Analysis Complete</h4><p><strong class="text-slate-900">Urgency Score:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.score}</span></p><p><strong class="text-slate-900">Assigned Urgency:</strong> <span class="font-semibold ${result.urgency === 'High' ? 'text-[var(--color-emergency)]' : 'text-amber-500'}">${result.urgency}</span></p><p><strong class="text-slate-900">Recommended Staff:</strong> <span class="font-semibold text-[var(--color-primary)]">${result.urgency === 'High' ? 'Doctor' : 'Nurse'}</span></p><p class="text-sm text-slate-500 mt-4">A notification has been sent. Please wait to be called.</p>`;
+                } catch (error) {
+                    resultContainer.classList.remove('hidden');
+                    resultContainer.innerHTML = `<p class="text-red-500">Error: Could not analyze symptoms. Please try again.</p>`;
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Analyze Symptoms';
+                }
+            });
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false; recognition.lang = 'en-US';
+                voiceBtn.addEventListener('click', () => { recognition.start(); voiceBtn.classList.add('voice-active'); });
+                recognition.onresult = (event) => { addSymptom(event.results[0][0].transcript); };
+                recognition.onend = () => { voiceBtn.classList.remove('voice-active'); };
+            } else { voiceBtn.style.display = 'none'; }
+
+            document.querySelectorAll('#body-map path').forEach(part => {
+                part.addEventListener('click', () => {
+                    const symptom = part.dataset.symptom;
+                    addSymptom(symptom);
+                    gsap.fromTo(part, { scale: 1.2, fill: '#60a5fa' }, { scale: 1, duration: 0.3, ease: 'back.out(1.7)', fill: '#dbeafe' });
+                });
+            });
+        };
+        
+        // --- KICK EVERYTHING OFF ---
+        onReady(initApp);
+
+    })();
+  </script>
+</body>
+</html>
