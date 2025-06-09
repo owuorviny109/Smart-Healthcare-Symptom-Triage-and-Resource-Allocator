@@ -274,6 +274,13 @@
   toggleVisibility(emailField, false);
   toggleVisibility(passwordStrengthContainer, false);
 
+  // Show registration form if ?register=1 in URL
+  if (window.location.search.includes('register=1')) {
+    if (isLoginMode) {
+      toggleFormBtn.click();
+    }
+  }
+
 </script>
 
 </body>
